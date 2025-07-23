@@ -51,7 +51,10 @@ function App() {
       )}
 
       {currentView === "months" && (
-        <MonthTabs handleBack={handleBackToGeneral} handleGoToForecast={handleGoToForecast} />
+        <MonthTabs
+          handleBack={handleBackToGeneral}
+          handleGoToForecast={handleGoToForecast}
+        />
       )}
 
       {currentView === "forecast" && (
@@ -67,18 +70,44 @@ function App() {
             <p className="text-lg font-semibold text-gray-600 dark:text-gray-300">
               Year: {generalData?.year || "N/A"}
             </p>
-            <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
-              Salary: {generalData?.currency || "AED"} {generalData?.salary?.toLocaleString()}
+
+            {/* Display Primary and Family Salary */}
+            <p className="text-xl font-semibold text-gray-700 dark:text-gray-300 mt-4">
+              Primary Salary: {generalData?.currency || "AED"}{" "}
+              {Number(generalData?.primarySalary || 0).toLocaleString()}
             </p>
+            <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">
+              Family Salary: {generalData?.currency || "AED"}{" "}
+              {Number(generalData?.familySalary || 0).toLocaleString()}
+            </p>
+
+            {/* Display Total Salary */}
+            <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-300 mt-4">
+              Total Salary: {generalData?.currency || "AED"}{" "}
+              {(
+                Number(generalData?.primarySalary || 0) +
+                Number(generalData?.familySalary || 0)
+              ).toLocaleString()}
+            </p>
+
+            {/* Total Expenses */}
             <p className="text-xl font-semibold text-gray-600 dark:text-gray-300 mt-4">
               Total Expenses: {generalData?.currency || "AED"}{" "}
-              {generalData?.expenses?.reduce((sum, e) => sum + Number(e.actual || 0), 0).toLocaleString()}
+              {generalData?.expenses
+                ?.reduce((sum, e) => sum + Number(e.actual || 0), 0)
+                .toLocaleString()}
             </p>
+
+            {/* Remaining Budget */}
             <p className="text-xl font-semibold text-gray-600 dark:text-gray-300 mt-4">
               Remaining Budget: {generalData?.currency || "AED"}{" "}
               {(
-                generalData?.salary -
-                generalData?.expenses.reduce((sum, e) => sum + Number(e.actual || 0), 0)
+                Number(generalData?.primarySalary || 0) +
+                Number(generalData?.familySalary || 0) -
+                generalData?.expenses.reduce(
+                  (sum, e) => sum + Number(e.actual || 0),
+                  0
+                )
               ).toLocaleString()}
             </p>
           </div>

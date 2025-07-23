@@ -8,15 +8,15 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 function GeneralFeatures({ onSubmit, savedData }) {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(savedData?.year || currentYear);
-  const [salary, setSalary] = useState(savedData?.salary || "");   // Primary salary
-  const [familySalary, setFamilySalary] = useState(savedData?.familySalary || ""); // Family salary (optional)
+  const [primarySalary, setPrimarySalary] = useState(savedData?.primarySalary || ""); // Primary salary
+  const [familySalary, setFamilySalary] = useState(savedData?.familySalary || "");    // Family salary (optional)
   const [currency, setCurrency] = useState(savedData?.currency || "AED");  // Default currency is AED
   const [expenses, setExpenses] = useState(savedData?.expenses || Array(3).fill({ name: "", actual: "" }));  // Default 3 rows
 
   useEffect(() => {
     if (savedData) {
       setYear(savedData.year);
-      setSalary(savedData.salary);
+      setPrimarySalary(savedData.primarySalary);
       setFamilySalary(savedData.familySalary);
       setCurrency(savedData.currency);
       setExpenses(savedData.expenses);
@@ -34,12 +34,11 @@ function GeneralFeatures({ onSubmit, savedData }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    // Calculate total salary by adding primary salary and family salary
-    const totalSalary = Number(salary) + Number(familySalary);
 
+    // Save primary and family salary separately
     onSubmit({
       year,
-      salary: totalSalary, // Use combined salary value
+      primarySalary: Number(primarySalary),
       familySalary: Number(familySalary),
       currency,
       expenses: expenses.filter((e) => e.name.trim() !== ""),
@@ -70,32 +69,26 @@ function GeneralFeatures({ onSubmit, savedData }) {
           '#FF9800', // Orange
           '#8BC34A', // Light Green
           '#03A9F4', // Light Blue
-        ], // Neutral colors for the segments
+        ],
         borderColor: [
-          '#4CAF50', // Green (Border)
-          '#2196F3', // Blue (Border)
-          '#FF5722', // Red (Border)
-          '#FFC107', // Amber (Border)
-          '#9C27B0', // Purple (Border)
-          '#FF9800', // Orange (Border)
-          '#8BC34A', // Light Green (Border)
-          '#03A9F4', // Light Blue (Border)
-        ], // Border colors for the segments
+          '#4CAF50', '#2196F3', '#FF5722',
+          '#FFC107', '#9C27B0', '#FF9800',
+          '#8BC34A', '#03A9F4',
+        ],
         borderWidth: 1,
       },
     ],
   };
 
-  // Pie chart options for custom legend styling
   const chartOptions = {
     plugins: {
       legend: {
         labels: {
           font: {
-            weight: 'bold',  // Make the legend text bold
-            size: 16,        // Set the font size to 16
+            weight: 'bold',
+            size: 16,
           },
-          color: '#333',     // Set legend text color to dark (almost black)
+          color: '#333',
         },
       },
     },
@@ -107,7 +100,7 @@ function GeneralFeatures({ onSubmit, savedData }) {
       className="max-w-4xl mx-auto p-8 bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 rounded-3xl shadow-xl ring-2 ring-gray-200 dark:ring-gray-700 dark:bg-gray-900 transition-all duration-300"
     >
       <h2 className="text-5xl font-extrabold mb-12 text-white text-center tracking-tight">
-        General Features
+        Smart Budget
       </h2>
 
       {/* Year, Salary, and Currency Section */}
@@ -135,16 +128,16 @@ function GeneralFeatures({ onSubmit, savedData }) {
         </div>
 
         <div>
-          <label htmlFor="salary" className="block mb-3 font-semibold text-white text-lg">
+          <label htmlFor="primarySalary" className="block mb-3 font-semibold text-white text-lg">
             Primary Salary
           </label>
           <input
-            id="salary"
+            id="primarySalary"
             type="number"
             min="0"
-            value={salary}
-            onChange={(e) => setSalary(e.target.value)}
-            placeholder="Enter your salary"
+            value={primarySalary}
+            onChange={(e) => setPrimarySalary(e.target.value)}
+            placeholder="Enter your primary salary"
             className="w-full px-5 py-4 rounded-xl border-2 border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-400 focus:border-indigo-600 bg-white text-lg"
             required
             autoComplete="off"
@@ -195,7 +188,7 @@ function GeneralFeatures({ onSubmit, savedData }) {
         {expenses.map((expense, i) => (
           <div
             key={i}
-            className="grid grid-cols-12 gap-6 items-center mb-8 bg-white p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300"
+            className="grid grid-cols-12 gap-6 items-center mb-8 bg-white p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 relative"
           >
             <input
               type="text"
@@ -210,9 +203,7 @@ function GeneralFeatures({ onSubmit, savedData }) {
               placeholder="Actual Amount"
               min="0"
               value={expense.actual}
-              onChange={(e) =>
-                handleExpenseChange(i, "actual", e.target.value)
-              }
+              onChange={(e) => handleExpenseChange(i, "actual", e.target.value)}
               className="col-span-6 px-4 py-3 rounded-lg border-2 border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-400 focus:border-indigo-600"
               aria-label={`Actual amount for expense ${i + 1}`}
             />
