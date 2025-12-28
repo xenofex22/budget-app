@@ -53,6 +53,17 @@ function GeneralFeatures({ onSubmit, savedData }) {
     setExpenses(expenses.filter((_, i) => i !== index));
   }
 
+  function clampYear(val) {
+    const minY = 2000;
+    const maxY = currentYear + 10; // ✅ allow future years
+    if (Number.isNaN(val)) return currentYear;
+    return Math.min(maxY, Math.max(minY, val));
+  }
+
+  function incYear(delta) {
+    setYear((prev) => clampYear(Number(prev || currentYear) + delta));
+  }
+
   // Pie chart data preparation
   const chartData = {
     labels: expenses.map((expense) => expense.name || "Unnamed"), // Expense names as categories
@@ -109,22 +120,45 @@ function GeneralFeatures({ onSubmit, savedData }) {
           <label htmlFor="year" className="block mb-3 font-semibold text-white text-lg">
             Year
           </label>
-          <input
-            id="year"
-            type="number"
-            min="2000"
-            max={currentYear + 5}
-            value={year}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === "" || (val >= 2000 && val <= currentYear + 5)) {
-                setYear(Number(val));
-              }
-            }}
-            className="w-full px-5 py-4 rounded-xl border-2 border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-400 focus:border-indigo-600 bg-white text-lg"
-            required
-            autoComplete="off"
-          />
+
+          {/* Year input + +/- controls */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => incYear(-1)}
+              className="px-4 py-3 rounded-xl bg-white/90 hover:bg-white font-bold"
+              aria-label="Decrease year"
+              title="Decrease year"
+            >
+              −
+            </button>
+
+            <input
+              id="year"
+              type="number"
+              min="2000"
+              max={currentYear + 10}
+              value={year}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "") return;
+                setYear(clampYear(Number(val)));
+              }}
+              className="w-full px-5 py-4 rounded-xl border-2 border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-400 focus:border-indigo-600 bg-white text-lg"
+              required
+              autoComplete="off"
+            />
+
+            <button
+              type="button"
+              onClick={() => incYear(1)}
+              className="px-4 py-3 rounded-xl bg-white/90 hover:bg-white font-bold"
+              aria-label="Increase year"
+              title="Increase year"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         <div>
