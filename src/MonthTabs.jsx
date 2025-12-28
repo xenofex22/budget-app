@@ -62,19 +62,12 @@ function MonthTabs({ handleBack, selectedYear }) {
     const thisMonthIdx = today.getMonth();
     const monthIndex = months.indexOf(month);
 
-    // Past years -> keep 1
     if (selectedYear < thisYearNow) return 1;
-
-    // Same year, past months -> keep 1
     if (selectedYear === thisYearNow && monthIndex < thisMonthIdx) return 1;
 
-    // Target is always the 27th (salary day)
     const targetDate = new Date(selectedYear, monthIndex, 27);
-
-    // If we are past the target date (e.g., current month after 27th), keep 1
     if (today > targetDate) return 1;
 
-    // Live countdown from NOW to target 27th
     const daysLeft = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
     return daysLeft > 0 ? daysLeft : 1;
   };
@@ -89,42 +82,60 @@ function MonthTabs({ handleBack, selectedYear }) {
     }));
   };
 
-  // -----------------------------
-  // NEW HELPERS
-  // -----------------------------
+  // -------------------------------------------------
+  // HELPERS
+  // -------------------------------------------------
 
-  // Copy expense TITLES from a source month into all upcoming months,
-  // without overwriting existing titles.
-  const propagateExpenseTitlesForward = (prevState, sourceMonth) => {
+  // Ensure upcoming months have at least N rows in expenses array
+  const ensureExpenseRowCountForward = (state, sourceMonth, minRows) => {
     const sourceIndex = months.indexOf(sourceMonth);
-    const sourceExpenses = (prevState[sourceMonth]?.expenses || []).map((e) => ({
-      name: (e?.name || "").toString(),
-    }));
+    const nextState = { ...state };
 
-    const hasAnyTitle = sourceExpenses.some((e) => e.name.trim() !== "");
-    if (!hasAnyTitle) return prevState;
+    for (let i = sourceIndex + 1; i < months.length; i++) {
+      const m = months[i];
+      const md = nextState[m] || { current: 0, expenses: [], income: 0, expense: 0 };
+      const expenses = Array.isArray(md.expenses) ? [...md.expenses] : [];
 
+      while (expenses.length < minRows) {
+        expenses.push({ name: "", expected: 0, actual: 0 });
+      }
+
+      nextState[m] = { ...md, expenses };
+    }
+
+    return nextState;
+  };
+
+  // ✅ Smooth expense title propagation for a SINGLE row index
+  // Overwrite future month row title ONLY IF:
+  // - target title is empty, OR
+  // - target title equals previous title of the edited row (meaning it was auto-filled)
+  const propagateSingleExpenseTitleForward = (
+    prevState,
+    sourceMonth,
+    rowIndex,
+    newName,
+    prevName
+  ) => {
+    const sourceIndex = months.indexOf(sourceMonth);
     const nextState = { ...prevState };
 
     for (let i = sourceIndex + 1; i < months.length; i++) {
       const m = months[i];
       const md = nextState[m] || { current: 0, expenses: [], income: 0, expense: 0 };
-      const targetExpenses = Array.isArray(md.expenses) ? [...md.expenses] : [];
+      const expenses = Array.isArray(md.expenses) ? [...md.expenses] : [];
 
-      for (let r = 0; r < sourceExpenses.length; r++) {
-        const srcName = sourceExpenses[r]?.name || "";
-
-        if (!targetExpenses[r]) {
-          targetExpenses[r] = { name: srcName, expected: 0, actual: 0 };
-        } else {
-          const existingName = (targetExpenses[r].name || "").toString();
-          if (existingName.trim() === "" && srcName.trim() !== "") {
-            targetExpenses[r] = { ...targetExpenses[r], name: srcName };
-          }
-        }
+      // ensure row exists
+      while (expenses.length <= rowIndex) {
+        expenses.push({ name: "", expected: 0, actual: 0 });
       }
 
-      nextState[m] = { ...md, expenses: targetExpenses };
+      const existingName = (expenses[rowIndex]?.name || "").toString();
+
+      if (existingName.trim() === "" || existingName === prevName) {
+        expenses[rowIndex] = { ...expenses[rowIndex], name: newName };
+        nextState[m] = { ...md, expenses };
+      }
     }
 
     return nextState;
@@ -149,15 +160,19 @@ function MonthTabs({ handleBack, selectedYear }) {
     return nextState;
   };
 
-  // -----------------------------
-  // END HELPERS
-  // -----------------------------
+  // -------------------------------------------------
+  // HANDLERS
+  // -------------------------------------------------
 
   const handleExpenseChange = (month, index, field, value) => {
     setMonthlyData((prev) => {
       const monthData = prev[month] || { current: 0, expenses: [], income: 0, expense: 0 };
-      const updatedExpenses = [...(monthData.expenses || [])];
+      const oldExpenses = [...(monthData.expenses || [])];
 
+      const prevName = (oldExpenses[index]?.name || "").toString();
+
+      // update current month expense row
+      const updatedExpenses = [...oldExpenses];
       updatedExpenses[index] = {
         ...updatedExpenses[index],
         [field]: value,
@@ -171,9 +186,19 @@ function MonthTabs({ handleBack, selectedYear }) {
         },
       };
 
-      // If user edits the title, propagate titles forward
+      // ✅ Ensure upcoming months have same number of rows (so titles copy to same row)
+      nextState = ensureExpenseRowCountForward(nextState, month, updatedExpenses.length);
+
+      // ✅ Smooth title propagation while typing
       if (field === "name") {
-        nextState = propagateExpenseTitlesForward(nextState, month);
+        const newName = (value || "").toString();
+        nextState = propagateSingleExpenseTitleForward(
+          nextState,
+          month,
+          index,
+          newName,
+          prevName
+        );
       }
 
       return nextState;
@@ -196,8 +221,8 @@ function MonthTabs({ handleBack, selectedYear }) {
         },
       };
 
-      // Adding a row should also ensure upcoming months have the row skeleton
-      nextState = propagateExpenseTitlesForward(nextState, month);
+      // ✅ make sure upcoming months also have the new empty row
+      nextState = ensureExpenseRowCountForward(nextState, month, updatedExpenses.length);
 
       return nextState;
     });
@@ -392,10 +417,7 @@ function MonthTabs({ handleBack, selectedYear }) {
           </thead>
           <tbody>
             {(currentData.expenses || []).map((expense, index) => (
-              <tr
-                key={index}
-                className={index % 2 === 0 ? "bg-indigo-50" : ""}
-              >
+              <tr key={index} className={index % 2 === 0 ? "bg-indigo-50" : ""}>
                 <td className="px-6 py-4">
                   <input
                     type="text"
