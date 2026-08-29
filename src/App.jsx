@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import GeneralFeatures from "./GeneralFeatures";
 import MonthTabs from "./MonthTabs";
 import LoginScreen from "./LoginScreen";
+import CardManager from "./CardManager";
 import {
   applyBudgetSnapshot,
   clearBudgetCache,
@@ -40,6 +41,7 @@ function BudgetApp() {
   const [isEditing, setIsEditing] = useState(true);
   const [currentView, setCurrentView] = useState("general");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [monthTabsKey, setMonthTabsKey] = useState(0);
 
   useEffect(() => {
     const savedData = localStorage.getItem(BUDGET_KEY);
@@ -78,7 +80,17 @@ function BudgetApp() {
       )}
 
       {currentView === "months" && (
-        <MonthTabs selectedYear={selectedYear} handleBack={handleBackToGeneral} />
+        <div className="w-full">
+          <CardManager
+            selectedYear={selectedYear}
+            onBudgetChanged={() => setMonthTabsKey((value) => value + 1)}
+          />
+          <MonthTabs
+            key={monthTabsKey}
+            selectedYear={selectedYear}
+            handleBack={handleBackToGeneral}
+          />
+        </div>
       )}
 
       {currentView === "summary" && (
