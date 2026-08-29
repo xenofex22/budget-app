@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getBudgetPeriod } from "./budgetPeriod";
 
 const months = [
   "January", "February", "March", "April", "May", "June",
@@ -16,15 +17,18 @@ function loadCards() {
   }
 }
 
+function defaultTargetMonth(selectedYear) {
+  const period = getBudgetPeriod();
+  return selectedYear === period.year ? period.month : months[0];
+}
+
 export default function CardManager({ selectedYear, onBudgetChanged }) {
-  const now = new Date();
-  const defaultMonth = selectedYear === now.getFullYear() ? months[now.getMonth()] : months[0];
   const [cards, setCards] = useState(loadCards);
-  const [targetMonth, setTargetMonth] = useState(defaultMonth);
+  const [targetMonth, setTargetMonth] = useState(() => defaultTargetMonth(selectedYear));
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    setTargetMonth(selectedYear === new Date().getFullYear() ? months[new Date().getMonth()] : months[0]);
+    setTargetMonth(defaultTargetMonth(selectedYear));
   }, [selectedYear]);
 
   const totalUsed = useMemo(
