@@ -10,9 +10,9 @@ function loadCards() {
     const parsed = JSON.parse(localStorage.getItem("budgetCards") || "[]");
     return Array.isArray(parsed) && parsed.length
       ? parsed
-      : [{ id: crypto.randomUUID(), name: "Credit Card", limit: 15000, available: 15000 }];
+      : [{ id: crypto.randomUUID(), name: "Credit Card", last4: "", limit: 15000, available: 15000 }];
   } catch {
-    return [{ id: crypto.randomUUID(), name: "Credit Card", limit: 15000, available: 15000 }];
+    return [{ id: crypto.randomUUID(), name: "Credit Card", last4: "", limit: 15000, available: 15000 }];
   }
 }
 
@@ -33,13 +33,16 @@ export default function CardManager({ selectedYear, onBudgetChanged }) {
   );
 
   function updateCard(id, field, value) {
-    setCards((prev) => prev.map((card) => (
-      card.id === id ? { ...card, [field]: field === "name" ? value : value === "" ? "" : Number(value) } : card
-    )));
+    setCards((prev) => prev.map((card) => {
+      if (card.id !== id) return card;
+      if (field === "name") return { ...card, [field]: value };
+      if (field === "last4") return { ...card, last4: value.replace(/\D/g, "").slice(0, 4) };
+      return { ...card, [field]: value === "" ? "" : Number(value) };
+    }));
   }
 
   function addCard() {
-    setCards((prev) => [...prev, { id: crypto.randomUUID(), name: "Credit Card", limit: "", available: "" }]);
+    setCards((prev) => [...prev, { id: crypto.randomUUID(), name: "Credit Card", last4: "", limit: "", available: "" }]);
   }
 
   function removeCard(id) {
@@ -77,6 +80,7 @@ export default function CardManager({ selectedYear, onBudgetChanged }) {
         <div>
           <h3 className="text-2xl font-extrabold text-indigo-700 dark:text-indigo-300">Credit Cards</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">Used = card limit − available limit. This becomes the monthly expected “Cards” expense.</p>
+          <p className="text-xs text-gray-400 mt-1">Last 4 digits let bank SMS updates identify the correct card.</p>
         </div>
         <button type="button" onClick={addCard} className="px-4 py-2 rounded-xl bg-indigo-100 text-indigo-800 font-bold hover:bg-indigo-200">+ Add Card</button>
       </div>
@@ -90,11 +94,15 @@ export default function CardManager({ selectedYear, onBudgetChanged }) {
                 <label className="block text-xs font-semibold mb-1">Card</label>
                 <input value={card.name} onChange={(e) => updateCard(card.id, "name", e.target.value)} className="w-full p-2 rounded-lg border" />
               </div>
-              <div className="md:col-span-3">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold mb-1">Last 4</label>
+                <input inputMode="numeric" maxLength={4} value={card.last4 || ""} onChange={(e) => updateCard(card.id, "last4", e.target.value)} className="w-full p-2 rounded-lg border" placeholder="3743" />
+              </div>
+              <div className="md:col-span-2">
                 <label className="block text-xs font-semibold mb-1">Limit (AED)</label>
                 <input type="number" min="0" value={card.limit} onChange={(e) => updateCard(card.id, "limit", e.target.value)} className="w-full p-2 rounded-lg border" />
               </div>
-              <div className="md:col-span-3">
+              <div className="md:col-span-2">
                 <label className="block text-xs font-semibold mb-1">Available (AED)</label>
                 <input type="number" min="0" value={card.available} onChange={(e) => updateCard(card.id, "available", e.target.value)} className="w-full p-2 rounded-lg border" />
               </div>
