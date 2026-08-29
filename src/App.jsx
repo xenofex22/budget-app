@@ -120,6 +120,7 @@ function App() {
   const [appKey, setAppKey] = useState(0);
   const [syncState, setSyncState] = useState("Cloud ready");
   const lastSnapshot = useRef("");
+  const lastCloudUpdatedAt = useRef("");
 
   async function hydrateAccount(name) {
     setSyncState("Loading cloud data...");
@@ -128,9 +129,13 @@ function App() {
 
     if (cloud.data) {
       applyBudgetSnapshot(cloud.data);
+      lastCloudUpdatedAt.current = cloud.data.updatedAt || "";
     } else if (hasLocalBudget(localBefore)) {
       const shouldImport = window.confirm("Existing budget data was found on this device. Import it into your account?");
-      if (shouldImport) await saveCloudBudget(localBefore);
+      if (shouldImport) {
+        const saved = await saveCloudBudget(localBefore);
+        lastCloudUpdatedAt.current = saved.updatedAt || "";
+      }
     }
 
     lastSnapshot.current = JSON.stringify(collectBudgetSnapshot());
@@ -155,22 +160,45 @@ function App() {
   useEffect(() => {
     if (authState !== "authenticated") return undefined;
 
-    const timer = setInterval(async () => {
+    const saveTimer = setInterval(async () => {
       const snapshot = collectBudgetSnapshot();
       const serialized = JSON.stringify(snapshot);
       if (serialized === lastSnapshot.current) return;
 
       try {
         setSyncState("Saving...");
-        await saveCloudBudget(snapshot);
+        const saved = await saveCloudBudget(snapshot);
         lastSnapshot.current = serialized;
+        lastCloudUpdatedAt.current = saved.updatedAt || lastCloudUpdatedAt.current;
         setSyncState("Cloud synced");
       } catch {
         setSyncState("Sync problem");
       }
     }, 1500);
 
-    return () => clearInterval(timer);
+    const refreshTimer = setInterval(async () => {
+      const current = JSON.stringify(collectBudgetSnapshot());
+      if (current !== lastSnapshot.current) return;
+
+      try {
+        const cloud = await fetchCloudBudget();
+        const updatedAt = cloud.data?.updatedAt || "";
+        if (!cloud.data || !updatedAt || updatedAt === lastCloudUpdatedAt.current) return;
+
+        applyBudgetSnapshot(cloud.data);
+        lastCloudUpdatedAt.current = updatedAt;
+        lastSnapshot.current = JSON.stringify(collectBudgetSnapshot());
+        setAppKey((value) => value + 1);
+        setSyncState("Cloud refreshed");
+      } catch {
+        // Keep the current browser state if the refresh check fails.
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(saveTimer);
+      clearInterval(refreshTimer);
+    };
   }, [authState]);
 
   async function handleLogout() {
@@ -182,6 +210,7 @@ function App() {
     await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
     clearBudgetCache();
     lastSnapshot.current = "";
+    lastCloudUpdatedAt.current = "";
     setUsername("");
     setAuthState("anonymous");
   }
