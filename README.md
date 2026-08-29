@@ -1,14 +1,71 @@
-# React + Vite
+# Smart Budget
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite personal budget app with account login, cloud persistence, and a secure write-only endpoint prepared for iPhone Shortcuts transaction imports.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+## Account + cloud setup on Vercel
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Create an Upstash Redis database (the free tier is sufficient for normal personal use), then add the following Environment Variables to the Vercel project:
 
-v01-Improved Budget Summary page
+- `BUDGET_USERNAME`
+- `BUDGET_PASSWORD_HASH`
+- `SESSION_SECRET`
+- `SMS_DEVICE_TOKEN`
+- `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`
+  - `KV_REST_API_URL` / `KV_REST_API_TOKEN` are also accepted.
+
+Never commit real secrets to GitHub.
+
+### Generate the password hash
+
+Run locally and replace `YOUR_PASSWORD` only on your own machine:
+
+```bash
+node -e "console.log(require('crypto').createHash('sha256').update('YOUR_PASSWORD').digest('hex'))"
+```
+
+Store only the resulting hash in `BUDGET_PASSWORD_HASH`.
+
+### Generate random secrets
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Run this twice: once for `SESSION_SECRET` and once for `SMS_DEVICE_TOKEN`.
+
+## Existing-data migration
+
+After the first successful login, if the cloud account is empty but old browser budget data exists, the app asks whether to import it. The cloud copy then becomes the account master while localStorage acts as a synchronized browser cache for the existing UI.
+
+## iPhone Shortcut transaction endpoint
+
+`POST /api/transactions`
+
+Required header:
+
+```text
+X-Device-Token: <SMS_DEVICE_TOKEN>
+```
+
+Example JSON body:
+
+```json
+{
+  "type": "card_purchase",
+  "amount": 126.5,
+  "currency": "AED",
+  "merchant": "AMAZON",
+  "cardLast4": "1234",
+  "availableLimit": 8850,
+  "occurredAt": "2026-08-29T13:00:00+04:00"
+}
+```
+
+The endpoint is intentionally write-only. The device token cannot read budget information. The intended Shortcut should parse the bank message locally and send only structured fields, not the full SMS text, OTPs, or authentication messages.
