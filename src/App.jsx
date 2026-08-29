@@ -4,6 +4,7 @@ import GeneralFeatures from "./GeneralFeatures";
 import MonthTabs from "./MonthTabs";
 import LoginScreen from "./LoginScreen";
 import CardManager from "./CardManager";
+import { getBudgetPeriod } from "./budgetPeriod";
 import {
   applyBudgetSnapshot,
   clearBudgetCache,
@@ -36,11 +37,22 @@ function hasMonthlyDataForYear(year) {
   }
 }
 
+function resolveActiveYear(configuredYear) {
+  const now = new Date();
+  const period = getBudgetPeriod(now);
+  const year = Number(configuredYear || now.getFullYear());
+
+  // Keep historical/future manually configured years intact. For the active
+  // calendar year, allow the salary-cycle cutoff to roll into next January.
+  return year === now.getFullYear() ? period.year : year;
+}
+
 function BudgetApp() {
+  const initialPeriod = getBudgetPeriod();
   const [generalData, setGeneralData] = useState(null);
   const [isEditing, setIsEditing] = useState(true);
   const [currentView, setCurrentView] = useState("general");
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState(initialPeriod.year);
   const [monthTabsKey, setMonthTabsKey] = useState(0);
 
   useEffect(() => {
@@ -50,10 +62,15 @@ function BudgetApp() {
     try {
       const parsed = JSON.parse(savedData);
       setGeneralData(parsed);
-      const yr = parsed?.year || new Date().getFullYear();
-      setSelectedYear(yr);
+      const configuredYear = parsed?.year || new Date().getFullYear();
+      const activeYear = resolveActiveYear(configuredYear);
+      setSelectedYear(activeYear);
       setIsEditing(false);
-      setCurrentView(hasMonthlyDataForYear(yr) ? "months" : "summary");
+      setCurrentView(
+        hasMonthlyDataForYear(activeYear) || hasMonthlyDataForYear(configuredYear)
+          ? "months"
+          : "summary"
+      );
     } catch {
       // Ignore malformed legacy cache.
     }
@@ -62,10 +79,15 @@ function BudgetApp() {
   function handleGeneralSubmit(data) {
     localStorage.setItem(BUDGET_KEY, JSON.stringify(data));
     setGeneralData(data);
-    const yr = data?.year || new Date().getFullYear();
-    setSelectedYear(yr);
+    const configuredYear = data?.year || new Date().getFullYear();
+    const activeYear = resolveActiveYear(configuredYear);
+    setSelectedYear(activeYear);
     setIsEditing(false);
-    setCurrentView(hasMonthlyDataForYear(yr) ? "months" : "summary");
+    setCurrentView(
+      hasMonthlyDataForYear(activeYear) || hasMonthlyDataForYear(configuredYear)
+        ? "months"
+        : "summary"
+    );
   }
 
   function handleBackToGeneral() {
