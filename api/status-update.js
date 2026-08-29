@@ -17,6 +17,15 @@ function last4(value) {
   return String(value || "").replace(/\D/g, "").slice(-4);
 }
 
+function getBudgetPeriod(date) {
+  const period = new Date(date);
+  if (period.getDate() >= 27) period.setMonth(period.getMonth() + 1);
+  return {
+    year: String(period.getFullYear()),
+    month: months[period.getMonth()],
+  };
+}
+
 function ensureMonth(snapshot, year, month) {
   snapshot.monthly = snapshot.monthly || {};
   snapshot.monthly[year] = snapshot.monthly[year] || {};
@@ -76,8 +85,7 @@ module.exports = async function handler(req, res) {
 
   const occurredAt = req.body?.occurredAt ? new Date(req.body.occurredAt) : new Date();
   const when = Number.isNaN(occurredAt.getTime()) ? new Date() : occurredAt;
-  const year = String(when.getFullYear());
-  const month = months[when.getMonth()];
+  const { year, month } = getBudgetPeriod(when);
 
   try {
     const key = budgetKey(username);
@@ -105,7 +113,7 @@ module.exports = async function handler(req, res) {
 
     snapshot.updatedAt = new Date().toISOString();
     await setJson(key, snapshot);
-    return res.status(200).json({ ok: true, source, updatedAt: snapshot.updatedAt });
+    return res.status(200).json({ ok: true, source, year, month, updatedAt: snapshot.updatedAt });
   } catch (error) {
     console.error("status update", error);
     return res.status(500).json({ error: "Could not update budget status" });
