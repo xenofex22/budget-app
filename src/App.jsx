@@ -207,6 +207,7 @@ function App() {
 
     async function refreshFromCloud() {
       if (syncInFlight.current) return;
+      if (document.visibilityState !== "visible") return;
 
       const current = JSON.stringify(collectBudgetSnapshot());
       // Never replace unsaved manual edits. The fast save loop will upload them
@@ -236,7 +237,11 @@ function App() {
     // Manual edits are still written to localStorage by the existing UI, but
     // they are promoted to the account cloud quickly rather than living there.
     const saveTimer = setInterval(saveLocalIfDirty, 600);
-    const refreshTimer = setInterval(refreshFromCloud, 2500);
+
+    // Poll less often while the tab is actively visible. Returning to the tab
+    // still triggers an immediate refresh, while hidden tabs do not consume
+    // needless Redis reads.
+    const refreshTimer = setInterval(refreshFromCloud, 10000);
 
     // Mobile browsers throttle timers in the background. Pull immediately when
     // the user comes back to the app/tab so phone and PC converge right away.
