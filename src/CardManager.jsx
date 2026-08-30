@@ -22,6 +22,44 @@ function defaultTargetMonth(selectedYear) {
   return selectedYear === period.year ? period.month : months[0];
 }
 
+function calculateTotalUsed(cards) {
+  return cards.reduce(
+    (sum, card) => sum + Math.max(0, Number(card.limit || 0) - Number(card.available || 0)),
+    0
+  );
+}
+
+function writeCardsExpense(cards, year, month) {
+  const storageKey = `monthlyData_${year}`;
+  let monthly = {};
+  try {
+    monthly = JSON.parse(localStorage.getItem(storageKey) || "{}");
+  } catch {
+    monthly = {};
+  }
+
+  const monthData = monthly[month] || { current: 0, expenses: [], income: 0, expense: 0 };
+  const expenses = Array.isArray(monthData.expenses) ? [...monthData.expenses] : [];
+  const existingIndex = expenses.findIndex(
+    (item) => String(item?.name || "").trim().toLowerCase() === "cards"
+  );
+  const totalUsed = calculateTotalUsed(cards);
+  const expected = Number(totalUsed.toFixed(2));
+  const existingActual = existingIndex >= 0 ? Number(expenses[existingIndex]?.actual || 0) : 0;
+  const existingExpected = existingIndex >= 0 ? Number(expenses[existingIndex]?.expected || 0) : null;
+
+  // Avoid rewriting localStorage and triggering a cloud save when already in sync.
+  if (existingIndex >= 0 && existingExpected === expected) return false;
+
+  const cardRow = { name: "Cards", expected, actual: existingActual };
+  if (existingIndex >= 0) expenses[existingIndex] = { ...expenses[existingIndex], ...cardRow };
+  else expenses.push(cardRow);
+
+  monthly[month] = { ...monthData, expenses };
+  localStorage.setItem(storageKey, JSON.stringify(monthly));
+  return true;
+}
+
 export default function CardManager({ selectedYear, onBudgetChanged }) {
   const [cards, setCards] = useState(loadCards);
   const [targetMonth, setTargetMonth] = useState(() => defaultTargetMonth(selectedYear));
@@ -31,10 +69,22 @@ export default function CardManager({ selectedYear, onBudgetChanged }) {
     setTargetMonth(defaultTargetMonth(selectedYear));
   }, [selectedYear]);
 
-  const totalUsed = useMemo(
-    () => cards.reduce((sum, card) => sum + Math.max(0, Number(card.limit || 0) - Number(card.available || 0)), 0),
-    [cards]
-  );
+  // Keep the current card usage in the active salary-cycle budget month.
+  // From the 27th onward, getBudgetPeriod() points to the following month.
+  useEffect(() => {
+    const period = getBudgetPeriod();
+    if (selectedYear !== period.year) return;
+
+    if (writeCardsExpense(cards, period.year, period.month)) {
+      onBudgetChanged?.();
+    }
+    // This is intentionally a mount/year sync. Manual card edits are still
+    // committed through the Update Cards Expense button, while EI+ SMS updates
+    // are handled server-side using the same budget-period rule.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYear]);
+
+  const totalUsed = useMemo(() => calculateTotalUsed(cards), [cards]);
 
   function updateCard(id, field, value) {
     setCards((prev) => prev.map((card) => {
@@ -55,25 +105,7 @@ export default function CardManager({ selectedYear, onBudgetChanged }) {
 
   function saveCardsToMonth() {
     localStorage.setItem("budgetCards", JSON.stringify(cards));
-
-    const storageKey = `monthlyData_${selectedYear}`;
-    let monthly = {};
-    try {
-      monthly = JSON.parse(localStorage.getItem(storageKey) || "{}");
-    } catch {
-      monthly = {};
-    }
-
-    const monthData = monthly[targetMonth] || { current: 0, expenses: [], income: 0, expense: 0 };
-    const expenses = Array.isArray(monthData.expenses) ? [...monthData.expenses] : [];
-    const existingIndex = expenses.findIndex((item) => String(item?.name || "").trim().toLowerCase() === "cards");
-    const cardRow = { name: "Cards", expected: Number(totalUsed.toFixed(2)), actual: existingIndex >= 0 ? Number(expenses[existingIndex]?.actual || 0) : 0 };
-
-    if (existingIndex >= 0) expenses[existingIndex] = { ...expenses[existingIndex], ...cardRow };
-    else expenses.push(cardRow);
-
-    monthly[targetMonth] = { ...monthData, expenses };
-    localStorage.setItem(storageKey, JSON.stringify(monthly));
+    writeCardsExpense(cards, selectedYear, targetMonth);
     setMessage(`Cards expected expense updated for ${targetMonth}: AED ${totalUsed.toFixed(2)}`);
     onBudgetChanged?.();
   }
