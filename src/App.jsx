@@ -11,7 +11,10 @@ import {
   collectBudgetSnapshot,
   fetchCloudBudget,
   hasLocalBudget,
+  markLegacyProductionMigrationComplete,
+  mergeBudgetSnapshots,
   saveCloudBudget,
+  shouldRunLegacyProductionMigration,
 } from "./cloudStorage";
 
 const BUDGET_KEY = "userBudgetData";
@@ -148,23 +151,31 @@ function App() {
     setSyncState("Loading cloud data...");
     const localBefore = collectBudgetSnapshot();
     const cloud = await fetchCloudBudget();
+    const shouldMigrate = shouldRunLegacyProductionMigration(localBefore);
 
     if (cloud.data) {
-      applyBudgetSnapshot(cloud.data);
-      lastCloudUpdatedAt.current = cloud.data.updatedAt || "";
-    } else if (hasLocalBudget(localBefore)) {
-      const shouldImport = window.confirm("Existing budget data was found on this device. Import it into your account?");
-      if (shouldImport) {
-        const saved = await saveCloudBudget(localBefore);
+      if (shouldMigrate) {
+        setSyncState("Migrating existing budget...");
+        const merged = mergeBudgetSnapshots(localBefore, cloud.data);
+        applyBudgetSnapshot(merged);
+        const saved = await saveCloudBudget(merged);
+        markLegacyProductionMigrationComplete();
         lastCloudUpdatedAt.current = saved.updatedAt || "";
+      } else {
+        applyBudgetSnapshot(cloud.data);
+        lastCloudUpdatedAt.current = cloud.data.updatedAt || "";
       }
+    } else if (hasLocalBudget(localBefore)) {
+      const saved = await saveCloudBudget(localBefore);
+      if (shouldMigrate) markLegacyProductionMigrationComplete();
+      lastCloudUpdatedAt.current = saved.updatedAt || "";
     }
 
     lastSnapshot.current = JSON.stringify(collectBudgetSnapshot());
     setUsername(name);
     setAppKey((value) => value + 1);
     setAuthState("authenticated");
-    setSyncState("Cloud synced");
+    setSyncState(shouldMigrate ? "Migration complete · Cloud synced" : "Cloud synced");
   }
 
   useEffect(() => {
