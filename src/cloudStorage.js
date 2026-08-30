@@ -1,5 +1,7 @@
+import { getBudgetPeriod } from "./budgetPeriod";
+
 const GENERAL_KEY = "userBudgetData";
-const MIGRATION_KEY = "budgetCloudMigrationV2Complete";
+const MIGRATION_KEY = "budgetCloudMigrationV3Complete";
 const PRODUCTION_HOST = "budget-app-zeta-silk.vercel.app";
 
 export function collectBudgetSnapshot() {
@@ -41,8 +43,8 @@ function mergeExpenses(localExpenses, cloudExpenses) {
   const local = Array.isArray(localExpenses) ? localExpenses.map((item) => ({ ...item })) : [];
   const cloud = Array.isArray(cloudExpenses) ? cloudExpenses : [];
 
-  // Legacy browser data is authoritative for normal expense rows. The Cards
-  // row is new cloud-backed state and should keep the latest SMS-derived value.
+  // Legacy device data is authoritative for normal expense rows. The Cards
+  // row is cloud-backed and should keep the latest SMS-derived value.
   const cloudCards = cloud.find(
     (item) => String(item?.name || "").trim().toLowerCase() === "cards"
   );
@@ -66,7 +68,7 @@ function mergeExpenses(localExpenses, cloudExpenses) {
   return local;
 }
 
-function mergeMonth(localMonth, cloudMonth) {
+function mergeMonth(localMonth, cloudMonth, isActivePeriod) {
   if (!localMonth) return cloudMonth ? { ...cloudMonth } : undefined;
   if (!cloudMonth) return { ...localMonth };
 
@@ -76,11 +78,18 @@ function mergeMonth(localMonth, cloudMonth) {
   return {
     ...cloudMonth,
     ...localMonth,
-    // A non-zero cloud current balance is normally the latest ENBD SMS value.
-    current: cloudCurrent !== 0 ? cloudCurrent : localCurrent,
-    // Preserve established legacy forecasts; use cloud only when legacy is blank.
-    income: Number(localMonth.income || 0) !== 0 ? localMonth.income : cloudMonth.income,
-    expense: Number(localMonth.expense || 0) !== 0 ? localMonth.expense : cloudMonth.expense,
+    // Historical months come from the legacy device. For the active salary
+    // period, keep a non-zero cloud Current Account because it is normally the
+    // latest ENBD SMS balance.
+    current: isActivePeriod && cloudCurrent !== 0 ? cloudCurrent : localCurrent,
+    // Historical forecasts are also authoritative on the legacy device. In the
+    // active period, only fall back to cloud when the legacy value is blank.
+    income: isActivePeriod
+      ? (Number(localMonth.income || 0) !== 0 ? localMonth.income : cloudMonth.income)
+      : localMonth.income,
+    expense: isActivePeriod
+      ? (Number(localMonth.expense || 0) !== 0 ? localMonth.expense : cloudMonth.expense)
+      : localMonth.expense,
     expenses: mergeExpenses(localMonth.expenses, cloudMonth.expenses),
   };
 }
@@ -89,6 +98,7 @@ export function mergeBudgetSnapshots(localSnapshot, cloudSnapshot) {
   const local = localSnapshot || { general: null, monthly: {}, cards: [] };
   const cloud = cloudSnapshot || { general: null, monthly: {}, cards: [] };
   const monthly = {};
+  const activePeriod = getBudgetPeriod();
   const years = new Set([
     ...Object.keys(local.monthly || {}),
     ...Object.keys(cloud.monthly || {}),
@@ -101,7 +111,8 @@ export function mergeBudgetSnapshots(localSnapshot, cloudSnapshot) {
     const monthNames = new Set([...Object.keys(localYear), ...Object.keys(cloudYear)]);
 
     monthNames.forEach((month) => {
-      const merged = mergeMonth(localYear[month], cloudYear[month]);
+      const isActivePeriod = Number(year) === activePeriod.year && month === activePeriod.month;
+      const merged = mergeMonth(localYear[month], cloudYear[month], isActivePeriod);
       if (merged) mergedYear[month] = merged;
     });
 
