@@ -11,10 +11,7 @@ import {
   collectBudgetSnapshot,
   fetchCloudBudget,
   hasLocalBudget,
-  markLegacyProductionMigrationComplete,
-  mergeBudgetSnapshots,
   saveCloudBudget,
-  shouldRunLegacyProductionMigration,
 } from "./cloudStorage";
 
 const BUDGET_KEY = "userBudgetData";
@@ -75,7 +72,7 @@ function BudgetApp() {
           : "summary"
       );
     } catch {
-      // Ignore malformed legacy cache.
+      // Ignore malformed browser cache.
     }
   }, []);
 
@@ -146,28 +143,21 @@ function App() {
   const [syncState, setSyncState] = useState("Cloud ready");
   const lastSnapshot = useRef("");
   const lastCloudUpdatedAt = useRef("");
+  const syncInFlight = useRef(false);
 
   async function hydrateAccount(name) {
     setSyncState("Loading cloud data...");
     const localBefore = collectBudgetSnapshot();
     const cloud = await fetchCloudBudget();
-    const shouldMigrate = shouldRunLegacyProductionMigration(localBefore);
 
+    // Migration is complete. From now on, an existing account snapshot is the
+    // single source of truth on every device. Browser storage is only a cache.
     if (cloud.data) {
-      if (shouldMigrate) {
-        setSyncState("Migrating existing budget...");
-        const merged = mergeBudgetSnapshots(localBefore, cloud.data);
-        applyBudgetSnapshot(merged);
-        const saved = await saveCloudBudget(merged);
-        markLegacyProductionMigrationComplete();
-        lastCloudUpdatedAt.current = saved.updatedAt || "";
-      } else {
-        applyBudgetSnapshot(cloud.data);
-        lastCloudUpdatedAt.current = cloud.data.updatedAt || "";
-      }
+      applyBudgetSnapshot(cloud.data);
+      lastCloudUpdatedAt.current = cloud.data.updatedAt || "";
     } else if (hasLocalBudget(localBefore)) {
+      // Only bootstrap from local storage if the account has no cloud data yet.
       const saved = await saveCloudBudget(localBefore);
-      if (shouldMigrate) markLegacyProductionMigrationComplete();
       lastCloudUpdatedAt.current = saved.updatedAt || "";
     }
 
@@ -175,7 +165,7 @@ function App() {
     setUsername(name);
     setAppKey((value) => value + 1);
     setAuthState("authenticated");
-    setSyncState(shouldMigrate ? "Migration complete · Cloud synced" : "Cloud synced");
+    setSyncState("Cloud synced");
   }
 
   useEffect(() => {
@@ -192,27 +182,38 @@ function App() {
 
   useEffect(() => {
     if (authState !== "authenticated") return undefined;
+    let disposed = false;
 
-    const saveTimer = setInterval(async () => {
+    async function saveLocalIfDirty() {
+      if (syncInFlight.current) return;
+
       const snapshot = collectBudgetSnapshot();
       const serialized = JSON.stringify(snapshot);
       if (serialized === lastSnapshot.current) return;
 
+      syncInFlight.current = true;
       try {
-        setSyncState("Saving...");
+        if (!disposed) setSyncState("Saving...");
         const saved = await saveCloudBudget(snapshot);
         lastSnapshot.current = serialized;
         lastCloudUpdatedAt.current = saved.updatedAt || lastCloudUpdatedAt.current;
-        setSyncState("Cloud synced");
+        if (!disposed) setSyncState("Cloud synced");
       } catch {
-        setSyncState("Sync problem");
+        if (!disposed) setSyncState("Sync problem");
+      } finally {
+        syncInFlight.current = false;
       }
-    }, 1500);
+    }
 
-    const refreshTimer = setInterval(async () => {
+    async function refreshFromCloud() {
+      if (syncInFlight.current) return;
+
       const current = JSON.stringify(collectBudgetSnapshot());
+      // Never replace unsaved manual edits. The fast save loop will upload them
+      // first; the next refresh can then safely check for newer cloud data.
       if (current !== lastSnapshot.current) return;
 
+      syncInFlight.current = true;
       try {
         const cloud = await fetchCloudBudget();
         const updatedAt = cloud.data?.updatedAt || "";
@@ -221,25 +222,58 @@ function App() {
         applyBudgetSnapshot(cloud.data);
         lastCloudUpdatedAt.current = updatedAt;
         lastSnapshot.current = JSON.stringify(collectBudgetSnapshot());
-        setAppKey((value) => value + 1);
-        setSyncState("Cloud refreshed");
+        if (!disposed) {
+          setAppKey((value) => value + 1);
+          setSyncState("Cloud refreshed");
+        }
       } catch {
-        // Keep the current browser state if the refresh check fails.
+        // Keep the current browser cache if a refresh check temporarily fails.
+      } finally {
+        syncInFlight.current = false;
       }
-    }, 5000);
+    }
+
+    // Manual edits are still written to localStorage by the existing UI, but
+    // they are promoted to the account cloud quickly rather than living there.
+    const saveTimer = setInterval(saveLocalIfDirty, 600);
+    const refreshTimer = setInterval(refreshFromCloud, 2500);
+
+    // Mobile browsers throttle timers in the background. Pull immediately when
+    // the user comes back to the app/tab so phone and PC converge right away.
+    const handleFocus = () => { void refreshFromCloud(); };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") void refreshFromCloud();
+      else void saveLocalIfDirty();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
+      disposed = true;
       clearInterval(saveTimer);
       clearInterval(refreshTimer);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [authState]);
 
   async function handleLogout() {
-    try {
-      await saveCloudBudget(collectBudgetSnapshot());
-    } catch {
-      // Logout should still work if cloud save is temporarily unavailable.
+    // Do not let an untouched stale browser overwrite newer cloud data on
+    // logout. Only upload if this device actually has an unsaved local change.
+    const snapshot = collectBudgetSnapshot();
+    const serialized = JSON.stringify(snapshot);
+    if (serialized !== lastSnapshot.current) {
+      try {
+        setSyncState("Saving...");
+        const saved = await saveCloudBudget(snapshot);
+        lastSnapshot.current = serialized;
+        lastCloudUpdatedAt.current = saved.updatedAt || lastCloudUpdatedAt.current;
+      } catch {
+        // Logout should still work if cloud save is temporarily unavailable.
+      }
     }
+
     await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
     clearBudgetCache();
     lastSnapshot.current = "";
@@ -265,7 +299,7 @@ function App() {
             <div className="font-extrabold text-indigo-700 dark:text-indigo-300 truncate">{username}</div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden sm:block text-sm font-semibold text-gray-500 dark:text-gray-400">{syncState}</div>
+            <div className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400">{syncState}</div>
             <button
               type="button"
               onClick={handleLogout}
