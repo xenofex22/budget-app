@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { getBudgetPeriod } from "./budgetPeriod";
 
 const months = [
   "January", "February", "March", "April", "May", "June",
@@ -7,10 +8,8 @@ const months = [
 
 function MonthTabs({ handleBack, selectedYear }) {
   const now = new Date();
-  const thisYear = now.getFullYear();
-  const currentMonthIndexThisYear = now.getMonth();
-
-  const defaultMonthIndex = selectedYear === thisYear ? currentMonthIndexThisYear : 0;
+  const budgetPeriod = getBudgetPeriod(now);
+  const defaultMonthIndex = selectedYear === budgetPeriod.year ? budgetPeriod.monthIndex : 0;
 
   const [selectedMonth, setSelectedMonth] = useState(months[defaultMonthIndex]);
   const [monthlyData, setMonthlyData] = useState({});
