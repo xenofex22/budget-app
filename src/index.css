@@ -4,35 +4,31 @@
 @tailwind utilities;
 
 :root {
-  --sb-bg: #212121;
-  --sb-header: #171717;
-  --sb-surface: #2b2b2b;
-  --sb-surface-2: #303030;
-  --sb-surface-3: #262626;
-  --sb-input: #2f2f2f;
-  --sb-text: #f2f2f2;
-  --sb-text-soft: #d8d8d8;
-  --sb-muted: #a6a6a6;
-  --sb-border: #444444;
-  --sb-border-soft: #393939;
-  --sb-white: #f4f4f4;
-  --sb-black: #111111;
-  --sb-green: #8ecf9c;
-  --sb-green-bg: #243028;
-  --sb-red: #e58b91;
-  --sb-red-bg: #352527;
+  --shell: #0d0d0c;
+  --shell-2: #151513;
+  --paper: #f0eee6;
+  --paper-2: #e5e2d8;
+  --paper-3: #faf9f4;
+  --ink: #11110f;
+  --ink-soft: #383833;
+  --muted: #77746c;
+  --rule: #b9b5aa;
+  --rule-dark: #2e2e2a;
+  --accent: #b85d32;
+  --green: #39764a;
+  --red: #a33f45;
 }
 
 html {
-  background: var(--sb-bg);
+  background: var(--shell);
   color-scheme: dark;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--sb-bg);
-  color: var(--sb-text);
+  background: var(--shell);
+  color: #f4f2eb;
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -47,23 +43,24 @@ textarea {
 }
 
 ::selection {
-  background: #565656;
+  background: var(--accent);
   color: #fff;
 }
 
-/* App background */
+/* -------------------------------------------------
+   PAGE SHELL
+   ------------------------------------------------- */
 .min-h-screen.bg-gradient-to-tr,
 .min-h-screen.bg-indigo-50,
 .min-h-screen.bg-gray-950 {
-  background: var(--sb-bg) !important;
+  background: var(--shell) !important;
   background-image: none !important;
-  color: var(--sb-text) !important;
+  color: #f4f2eb !important;
 }
 
-/* Top bar */
 header.sticky {
-  background: var(--sb-header) !important;
-  border-color: var(--sb-border-soft) !important;
+  background: #090908 !important;
+  border-color: #2b2b28 !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -71,150 +68,160 @@ header.sticky {
 
 header.sticky .text-indigo-700,
 header.sticky .text-indigo-300 {
-  color: var(--sb-text) !important;
+  color: #f5f3ec !important;
 }
 
 header.sticky .text-gray-400,
 header.sticky .text-gray-500,
 header.sticky .text-gray-600 {
-  color: var(--sb-muted) !important;
+  color: #9b9890 !important;
 }
 
 header.sticky button.bg-red-600 {
   background: transparent !important;
-  color: var(--sb-text-soft) !important;
-  border: 1px solid var(--sb-border) !important;
+  color: #f4f2eb !important;
+  border: 1px solid #55514b !important;
+  border-radius: 0 !important;
 }
 
 header.sticky button.bg-red-600:hover {
-  background: #2a2a2a !important;
-  color: #fff !important;
+  background: #f4f2eb !important;
+  color: #111 !important;
 }
 
-/* Main panels */
+/* Give the working area more editorial breathing room. */
+.max-w-4xl {
+  max-width: 68rem !important;
+}
+
+/* -------------------------------------------------
+   PAPER WORKING SURFACES
+   ------------------------------------------------- */
 .max-w-4xl.bg-white,
 .max-w-md.bg-white,
-.bg-white.dark\:bg-gray-900 {
-  background: var(--sb-surface) !important;
-  background-image: none !important;
-  color: var(--sb-text) !important;
-  border: 1px solid var(--sb-border-soft) !important;
-  box-shadow: none !important;
-}
-
-.max-w-4xl.bg-white,
-.max-w-md.bg-white {
-  border-radius: 12px !important;
-}
-
-/* General Features */
+.bg-white.dark\:bg-gray-900,
 form.max-w-4xl.bg-gradient-to-r {
-  background: var(--sb-surface) !important;
+  background: var(--paper) !important;
   background-image: none !important;
-  color: var(--sb-text) !important;
-  border: 1px solid var(--sb-border-soft) !important;
+  color: var(--ink) !important;
+  border: 1px solid #353531 !important;
+  border-radius: 2px !important;
   box-shadow: none !important;
-  border-radius: 12px !important;
 }
 
-form.max-w-4xl.bg-gradient-to-r::before {
-  display: none !important;
+/* Deliberate top rule: more ledger/editorial, less dashboard card. */
+.max-w-4xl.bg-white,
+form.max-w-4xl.bg-gradient-to-r {
+  border-top: 5px solid #f8f6ef !important;
 }
 
-form.max-w-4xl > h2 {
-  color: #fff !important;
-  font-size: clamp(2rem, 5vw, 2.7rem) !important;
-  font-weight: 700 !important;
-  letter-spacing: 0 !important;
-  text-shadow: none !important;
-  margin-bottom: 2rem !important;
-}
-
-form.max-w-4xl label,
+.max-w-4xl.bg-white h1,
+.max-w-4xl.bg-white h2,
+.max-w-4xl.bg-white h3,
+.max-w-4xl.bg-white h4,
+.max-w-4xl.bg-white label,
+.max-w-4xl.bg-white strong,
+.max-w-4xl.bg-white p,
+form.max-w-4xl h1,
+form.max-w-4xl h2,
 form.max-w-4xl h3,
-form.max-w-4xl h4 {
-  color: var(--sb-text) !important;
+form.max-w-4xl h4,
+form.max-w-4xl label,
+form.max-w-4xl strong {
+  color: var(--ink) !important;
 }
 
+.max-w-4xl.bg-white p,
 form.max-w-4xl p {
-  color: var(--sb-muted) !important;
+  color: var(--muted) !important;
 }
 
-form.max-w-4xl .bg-white,
-form.max-w-4xl .bg-white\/95 {
-  background: var(--sb-surface-2) !important;
-  background-image: none !important;
-  color: var(--sb-text) !important;
-  border: 1px solid var(--sb-border-soft) !important;
-  box-shadow: none !important;
-  border-radius: 9px !important;
+/* -------------------------------------------------
+   TYPOGRAPHY
+   ------------------------------------------------- */
+form.max-w-4xl > h2 {
+  color: var(--ink) !important;
+  font-size: clamp(2rem, 4.8vw, 3rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.035em !important;
+  text-align: left !important;
+  text-shadow: none !important;
+  margin-bottom: 2.25rem !important;
+  padding-bottom: 0.9rem;
+  border-bottom: 2px solid var(--ink);
 }
 
-form.max-w-4xl section:last-of-type {
-  background: var(--sb-surface-3) !important;
-  background-image: none !important;
-  border: 1px solid var(--sb-border-soft) !important;
-  box-shadow: none !important;
-  border-radius: 10px !important;
+.max-w-4xl.bg-white > div:first-child h2,
+.max-w-4xl.bg-white > div:first-child h3 {
+  letter-spacing: -0.025em !important;
 }
 
-form.max-w-4xl section:last-of-type .bg-indigo-50 {
-  background: var(--sb-surface-2) !important;
-  border: 1px solid var(--sb-border-soft) !important;
+/* Credit Cards header becomes a ruled editorial header, not a card hero. */
+.max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1rem;
+  margin-bottom: 0 !important;
 }
 
-form.max-w-4xl canvas {
-  max-height: 330px;
+.max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 h3 {
+  font-size: 2rem !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
 }
 
-/* Inputs */
+/* -------------------------------------------------
+   INPUTS — PLAIN INK-ON-PAPER CONTROLS
+   ------------------------------------------------- */
 input,
 select,
 textarea {
-  background: var(--sb-input) !important;
-  color: var(--sb-text) !important;
-  border: 1px solid var(--sb-border) !important;
-  border-radius: 7px !important;
+  background: var(--paper-3) !important;
+  color: var(--ink) !important;
+  border: 1px solid #9e9a90 !important;
+  border-radius: 0 !important;
   box-shadow: none !important;
   outline: none !important;
-  transition: border-color 120ms ease, background 120ms ease !important;
+  transition: border-color 100ms ease, background 100ms ease !important;
 }
 
 input:hover,
 select:hover,
 textarea:hover {
-  background: #333333 !important;
-  border-color: #555555 !important;
+  background: #fff !important;
+  border-color: #6e6b64 !important;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  background: #333333 !important;
-  border-color: #777777 !important;
-  box-shadow: none !important;
+  background: #fff !important;
+  border-color: var(--ink) !important;
+  box-shadow: inset 0 -2px 0 var(--ink) !important;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #8f8f8f !important;
+  color: #8c8981 !important;
 }
 
 select option {
-  background: var(--sb-surface-2);
-  color: var(--sb-text);
+  background: #fff;
+  color: var(--ink);
 }
 
 input[type="checkbox"] {
-  accent-color: #d9d9d9;
+  accent-color: var(--ink);
 }
 
-/* Buttons: neutral, simple, no gradients or glow */
+/* -------------------------------------------------
+   BUTTONS — INK / PAPER, NOT SAAS PILLS
+   ------------------------------------------------- */
 button {
   box-shadow: none !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   letter-spacing: 0 !important;
-  transition: background 120ms ease, color 120ms ease, border-color 120ms ease !important;
+  border-radius: 0 !important;
+  transition: background 100ms ease, color 100ms ease, border-color 100ms ease !important;
 }
 
 button:active {
@@ -223,70 +230,235 @@ button:active {
 
 button.bg-indigo-600,
 button.bg-indigo-700,
-button.bg-blue-600 {
-  background: var(--sb-white) !important;
+button.bg-blue-600,
+button.bg-gradient-to-r {
+  background: var(--ink) !important;
   background-image: none !important;
-  color: var(--sb-black) !important;
-  border: 1px solid var(--sb-white) !important;
+  color: #f8f6ef !important;
+  border: 1px solid var(--ink) !important;
 }
 
 button.bg-indigo-600:hover,
 button.bg-indigo-700:hover,
-button.bg-blue-600:hover {
-  background: #ffffff !important;
-  border-color: #ffffff !important;
+button.bg-blue-600:hover,
+button.bg-gradient-to-r:hover {
+  background: #000 !important;
+  border-color: #000 !important;
 }
 
 button.bg-indigo-100,
 button.bg-white {
-  background: var(--sb-surface-2) !important;
-  color: var(--sb-text-soft) !important;
-  border: 1px solid var(--sb-border) !important;
+  background: transparent !important;
+  color: var(--ink) !important;
+  border: 1px solid #88847a !important;
 }
 
 button.bg-indigo-100:hover,
 button.bg-white:hover {
-  background: #383838 !important;
+  background: var(--ink) !important;
   color: #fff !important;
-}
-
-button.bg-gradient-to-r {
-  background: var(--sb-white) !important;
-  background-image: none !important;
-  color: var(--sb-black) !important;
-  border: 1px solid var(--sb-white) !important;
-}
-
-button.bg-gradient-to-r:hover {
-  background: #ffffff !important;
-  background-image: none !important;
-  border-color: #ffffff !important;
+  border-color: var(--ink) !important;
 }
 
 button.bg-red-500,
 button.bg-red-600 {
   background: transparent !important;
-  color: var(--sb-red) !important;
-  border: 1px solid #664044 !important;
+  color: var(--red) !important;
+  border: 1px solid #b98d90 !important;
 }
 
 button.bg-red-500:hover,
 button.bg-red-600:hover {
-  background: var(--sb-red-bg) !important;
+  background: var(--red) !important;
+  color: #fff !important;
+  border-color: var(--red) !important;
 }
 
-/* Old Tailwind color classes remapped to neutral UI */
+/* -------------------------------------------------
+   GENERAL FEATURES — EDITORIAL PLAN SHEET
+   ------------------------------------------------- */
+form.max-w-4xl.bg-gradient-to-r::before {
+  display: none !important;
+}
+
+form.max-w-4xl .bg-white,
+form.max-w-4xl .bg-white\/95 {
+  background: var(--paper-3) !important;
+  background-image: none !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--rule) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Make the planning summary read like a black financial footer strip. */
+form.max-w-4xl section:last-of-type {
+  background: var(--ink) !important;
+  background-image: none !important;
+  color: #f6f3eb !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+form.max-w-4xl section:last-of-type h3,
+form.max-w-4xl section:last-of-type h4,
+form.max-w-4xl section:last-of-type p,
+form.max-w-4xl section:last-of-type span,
+form.max-w-4xl section:last-of-type strong,
+form.max-w-4xl section:last-of-type div {
+  color: #f6f3eb !important;
+}
+
+form.max-w-4xl section:last-of-type .bg-indigo-50,
+form.max-w-4xl section:last-of-type .bg-green-50,
+form.max-w-4xl section:last-of-type .bg-red-50 {
+  background: #1e1e1b !important;
+  border: 1px solid #3b3b36 !important;
+  border-radius: 0 !important;
+}
+
+form.max-w-4xl canvas {
+  max-height: 330px;
+}
+
+/* -------------------------------------------------
+   CREDIT CARDS — LEDGER ROWS INSTEAD OF NESTED CARDS
+   ------------------------------------------------- */
+.rounded-2xl.bg-indigo-50,
+.rounded-xl.bg-indigo-50 {
+  background: transparent !important;
+  border: 0 !important;
+  border-top: 1px solid var(--rule) !important;
+  border-bottom: 1px solid var(--rule) !important;
+  border-radius: 0 !important;
+}
+
+.max-w-4xl.bg-white .space-y-4 {
+  margin-top: 0;
+}
+
+.max-w-4xl.bg-white .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: -1px !important;
+}
+
+.max-w-4xl.bg-white .rounded-2xl.bg-indigo-50 {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.max-w-4xl.bg-white .rounded-2xl.bg-indigo-50 .bg-white,
+.max-w-4xl.bg-white .rounded-2xl.bg-indigo-50 .dark\:bg-gray-900 {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--ink) !important;
+}
+
+/* Used figure gets typographic emphasis instead of another filled card. */
+.max-w-4xl.bg-white .rounded-2xl.bg-indigo-50 .font-extrabold {
+  font-size: 1.2rem !important;
+  letter-spacing: -0.02em;
+}
+
+/* Bottom card summary becomes a ruled footer. */
+.max-w-4xl.bg-white > .mt-5.flex.flex-wrap.gap-3.items-end {
+  border-top: 2px solid var(--ink);
+  padding-top: 1rem;
+}
+
+.max-w-4xl.bg-white > .mt-5 .flex-1.min-w-48 {
+  background: transparent !important;
+  border: 0 !important;
+  border-left: 4px solid var(--accent) !important;
+  border-radius: 0 !important;
+  padding-left: 1rem !important;
+}
+
+/* -------------------------------------------------
+   MONTH NAVIGATION — LIKE AN INDEX STRIP
+   ------------------------------------------------- */
+button.bg-indigo-600.text-white {
+  background: var(--ink) !important;
+  color: #fff !important;
+  border: 1px solid var(--ink) !important;
+  border-radius: 0 !important;
+}
+
+button.bg-indigo-100.text-gray-800 {
+  background: transparent !important;
+  color: var(--ink-soft) !important;
+  border: 0 !important;
+  border-bottom: 1px solid #8d897f !important;
+  border-radius: 0 !important;
+}
+
+button.bg-indigo-100.text-gray-800:hover {
+  background: var(--paper-2) !important;
+  color: var(--ink) !important;
+}
+
+/* -------------------------------------------------
+   TABLES — BANK STATEMENT / LEDGER FEEL
+   ------------------------------------------------- */
+table {
+  background: var(--paper-3) !important;
+  background-image: none !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--ink) !important;
+  border-radius: 0 !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  box-shadow: none !important;
+}
+
+thead,
+thead.bg-indigo-600 {
+  background: var(--ink) !important;
+  color: #f8f6ef !important;
+}
+
+thead th {
+  color: #f8f6ef !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.015em !important;
+  border: 1px solid var(--ink) !important;
+}
+
+tbody tr,
+tbody tr.bg-indigo-50,
+tbody tr:nth-child(even) {
+  background: var(--paper-3) !important;
+  color: var(--ink) !important;
+}
+
+tbody tr:nth-child(even) {
+  background: #e9e6dc !important;
+}
+
+tbody tr:hover {
+  background: #dedacf !important;
+}
+
+tbody td {
+  color: var(--ink-soft) !important;
+  border: 1px solid #c3beb2 !important;
+}
+
+/* -------------------------------------------------
+   LEGACY TAILWIND COLOR REMAP
+   ------------------------------------------------- */
 .bg-indigo-50 {
-  background-color: var(--sb-surface-2) !important;
+  background-color: var(--paper-2) !important;
 }
 
 .bg-indigo-100 {
-  background-color: #383838 !important;
+  background-color: var(--paper-2) !important;
 }
 
 .bg-indigo-600,
 .bg-indigo-700 {
-  background-color: var(--sb-white) !important;
+  background-color: var(--ink) !important;
 }
 
 .text-indigo-800,
@@ -296,41 +468,41 @@ button.bg-red-600:hover {
 .text-indigo-400,
 .text-indigo-300,
 .text-blue-600 {
-  color: var(--sb-text) !important;
+  color: var(--ink) !important;
 }
 
 .text-gray-300,
 .text-gray-700,
 .text-gray-800 {
-  color: var(--sb-text-soft) !important;
+  color: var(--ink-soft) !important;
 }
 
 .text-gray-400,
 .text-gray-500,
 .text-gray-600 {
-  color: var(--sb-muted) !important;
+  color: var(--muted) !important;
 }
 
 .bg-gray-800,
 .bg-gray-900 {
-  background-color: var(--sb-surface-3) !important;
+  background-color: var(--paper-2) !important;
 }
 
 .bg-green-50 {
-  background-color: var(--sb-green-bg) !important;
+  background-color: #e0eadf !important;
 }
 
 .text-green-700,
 .text-green-400 {
-  color: var(--sb-green) !important;
+  color: var(--green) !important;
 }
 
 .bg-red-50 {
-  background-color: var(--sb-red-bg) !important;
+  background-color: #efe0df !important;
 }
 
 .text-red-700 {
-  color: var(--sb-red) !important;
+  color: var(--red) !important;
 }
 
 .ring-gray-200,
@@ -338,104 +510,43 @@ button.bg-red-600:hover {
 .ring-indigo-100,
 .ring-indigo-200,
 .ring-indigo-300 {
-  --tw-ring-color: var(--sb-border-soft) !important;
+  --tw-ring-color: transparent !important;
 }
 
-/* Month tabs */
-button.bg-indigo-600.text-white {
-  background: var(--sb-white) !important;
-  color: var(--sb-black) !important;
-  border: 1px solid var(--sb-white) !important;
-}
-
-button.bg-indigo-100.text-gray-800 {
-  background: var(--sb-surface-2) !important;
-  color: var(--sb-text-soft) !important;
-  border: 1px solid var(--sb-border-soft) !important;
-}
-
-/* Tables */
-table {
-  background: var(--sb-surface-3) !important;
-  background-image: none !important;
-  color: var(--sb-text) !important;
-  border: 1px solid var(--sb-border-soft) !important;
-  border-radius: 8px !important;
-  border-collapse: separate !important;
-  border-spacing: 0 !important;
-  overflow: hidden;
-  box-shadow: none !important;
-}
-
-thead,
-thead.bg-indigo-600 {
-  background: #303030 !important;
-  color: var(--sb-text) !important;
-}
-
-thead th {
-  color: var(--sb-text) !important;
-  font-size: 0.85rem !important;
-  font-weight: 600 !important;
-  letter-spacing: 0 !important;
-  border-bottom: 1px solid var(--sb-border) !important;
-}
-
-tbody tr,
-tbody tr.bg-indigo-50 {
-  background: var(--sb-surface-3) !important;
-  color: var(--sb-text) !important;
-}
-
-tbody tr:nth-child(even) {
-  background: #292929 !important;
-}
-
-tbody tr:hover {
-  background: #333333 !important;
-}
-
-tbody td {
-  color: var(--sb-text-soft) !important;
-  border-bottom: 1px solid var(--sb-border-soft) !important;
-}
-
-tbody tr:last-child td {
-  border-bottom: 0 !important;
-}
-
-/* Credit-card rows and summary blocks */
-.rounded-2xl.bg-indigo-50,
-.rounded-xl.bg-indigo-50 {
-  background: var(--sb-surface-2) !important;
-  border: 1px solid var(--sb-border-soft) !important;
-}
-
-/* Login */
+/* -------------------------------------------------
+   LOGIN — PAPER SHEET ON A DARK DESK
+   ------------------------------------------------- */
 form.max-w-md {
   padding: 2rem !important;
-  background: var(--sb-surface) !important;
-  background-image: none !important;
-  border: 1px solid var(--sb-border-soft) !important;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  border: 1px solid #353531 !important;
+  border-top: 5px solid #f8f6ef !important;
+  border-radius: 2px !important;
   box-shadow: none !important;
-  border-radius: 12px !important;
+}
+
+form.max-w-md h1,
+form.max-w-md label,
+form.max-w-md p {
+  color: var(--ink) !important;
 }
 
 form.max-w-md h1 {
-  color: #fff !important;
   font-size: 2rem !important;
   font-weight: 700 !important;
-  letter-spacing: 0 !important;
+  letter-spacing: -0.03em !important;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--ink);
 }
 
 form.max-w-md button {
-  background: var(--sb-white) !important;
-  color: var(--sb-black) !important;
-  border: 1px solid var(--sb-white) !important;
-  border-radius: 7px !important;
+  background: var(--ink) !important;
+  color: #fff !important;
+  border: 1px solid var(--ink) !important;
+  border-radius: 0 !important;
 }
 
-/* Remove legacy decorative shadow utilities from app surfaces */
 .shadow-2xl,
 .shadow-xl,
 .shadow-md {
@@ -443,19 +554,25 @@ form.max-w-md button {
   box-shadow: none !important;
 }
 
-/* Keep layout compact and practical */
+/* -------------------------------------------------
+   MOBILE
+   ------------------------------------------------- */
 @media (max-width: 640px) {
   .min-h-screen.p-8 {
-    padding: 0.75rem !important;
+    padding: 0.6rem !important;
   }
 
   form.max-w-4xl,
   .max-w-4xl.bg-white {
     padding: 1rem !important;
-    border-radius: 9px !important;
+    border-radius: 0 !important;
   }
 
   form.max-w-4xl > h2 {
     margin-bottom: 1.5rem !important;
+  }
+
+  .max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 h3 {
+    font-size: 1.65rem !important;
   }
 }
