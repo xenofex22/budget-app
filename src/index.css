@@ -4,33 +4,32 @@
 @tailwind utilities;
 
 :root {
-  --shell: #0d0d0c;
-  --shell-2: #151513;
-  --paper: #f0eee6;
-  --paper-2: #e5e2d8;
-  --paper-3: #faf9f4;
-  --ink: #11110f;
-  --ink-soft: #383833;
-  --muted: #77746c;
-  --rule: #b9b5aa;
-  --rule-dark: #2e2e2a;
-  --accent: #b85d32;
-  --green: #39764a;
-  --red: #a33f45;
+  --win-desktop: #008080;
+  --win-gray: #c0c0c0;
+  --win-gray-light: #dfdfdf;
+  --win-gray-mid: #808080;
+  --win-gray-dark: #404040;
+  --win-white: #ffffff;
+  --win-black: #000000;
+  --win-blue: #000080;
+  --win-blue-light: #1084d0;
+  --win-red: #c00000;
+  --win-green: #008000;
+  --win-yellow: #ffff00;
 }
 
 html {
-  background: var(--shell);
-  color-scheme: dark;
+  background: var(--win-desktop);
+  color-scheme: light;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--shell);
-  color: #f4f2eb;
+  background: var(--win-desktop);
+  color: var(--win-black);
   font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: 0;
 }
@@ -43,76 +42,97 @@ textarea {
 }
 
 ::selection {
-  background: var(--accent);
-  color: #fff;
+  background: var(--win-blue);
+  color: var(--win-white);
 }
 
 /* -------------------------------------------------
-   PAGE SHELL
+   CLASSIC WINDOWS 98 BEVELS
+   ------------------------------------------------- */
+button,
+select {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset 2px 2px 0 var(--win-gray-light),
+    inset -1px -1px 0 var(--win-black),
+    inset -2px -2px 0 var(--win-gray-mid) !important;
+}
+
+button:active {
+  box-shadow:
+    inset 1px 1px 0 var(--win-black),
+    inset 2px 2px 0 var(--win-gray-mid),
+    inset -1px -1px 0 var(--win-white),
+    inset -2px -2px 0 var(--win-gray-light) !important;
+  transform: translate(1px, 1px) !important;
+}
+
+/* -------------------------------------------------
+   DESKTOP / APP SHELL
    ------------------------------------------------- */
 .min-h-screen.bg-gradient-to-tr,
 .min-h-screen.bg-indigo-50,
 .min-h-screen.bg-gray-950 {
-  background: var(--shell) !important;
+  background: var(--win-desktop) !important;
   background-image: none !important;
-  color: #f4f2eb !important;
+  color: var(--win-black) !important;
 }
 
+/* Top bar becomes a Windows taskbar-like strip. */
 header.sticky {
-  background: #090908 !important;
-  border-color: #2b2b28 !important;
-  box-shadow: none !important;
+  background: var(--win-gray) !important;
+  border: 0 !important;
+  border-bottom: 2px solid var(--win-black) !important;
+  box-shadow:
+    inset 0 1px 0 var(--win-white),
+    inset 0 -1px 0 var(--win-gray-mid) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
 header.sticky .text-indigo-700,
-header.sticky .text-indigo-300 {
-  color: #f5f3ec !important;
-}
-
+header.sticky .text-indigo-300,
 header.sticky .text-gray-400,
 header.sticky .text-gray-500,
 header.sticky .text-gray-600 {
-  color: #9b9890 !important;
+  color: var(--win-black) !important;
 }
 
 header.sticky button.bg-red-600 {
-  background: transparent !important;
-  color: #f4f2eb !important;
-  border: 1px solid #55514b !important;
+  background: var(--win-gray) !important;
+  color: var(--win-black) !important;
   border-radius: 0 !important;
 }
 
 header.sticky button.bg-red-600:hover {
-  background: #f4f2eb !important;
-  color: #111 !important;
+  background: #d6d6d6 !important;
+  color: var(--win-red) !important;
 }
 
-/* Give the working area more editorial breathing room. */
 .max-w-4xl {
   max-width: 68rem !important;
 }
 
 /* -------------------------------------------------
-   PAPER WORKING SURFACES
+   WINDOW SURFACES
    ------------------------------------------------- */
 .max-w-4xl.bg-white,
 .max-w-md.bg-white,
-.bg-white.dark\:bg-gray-900,
+.bg-white.dark\\:bg-gray-900,
 form.max-w-4xl.bg-gradient-to-r {
-  background: var(--paper) !important;
+  background: var(--win-gray) !important;
   background-image: none !important;
-  color: var(--ink) !important;
-  border: 1px solid #353531 !important;
-  border-radius: 2px !important;
-  box-shadow: none !important;
-}
-
-/* Deliberate top rule: more ledger/editorial, less dashboard card. */
-.max-w-4xl.bg-white,
-form.max-w-4xl.bg-gradient-to-r {
-  border-top: 5px solid #f8f6ef !important;
+  color: var(--win-black) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset 2px 2px 0 var(--win-gray-light),
+    inset -1px -1px 0 var(--win-black),
+    inset -2px -2px 0 var(--win-gray-mid),
+    3px 3px 0 rgba(0,0,0,.28) !important;
 }
 
 .max-w-4xl.bg-white h1,
@@ -127,178 +147,57 @@ form.max-w-4xl h2,
 form.max-w-4xl h3,
 form.max-w-4xl h4,
 form.max-w-4xl label,
-form.max-w-4xl strong {
-  color: var(--ink) !important;
-}
-
-.max-w-4xl.bg-white p,
+form.max-w-4xl strong,
 form.max-w-4xl p {
-  color: var(--muted) !important;
+  color: var(--win-black) !important;
 }
 
 /* -------------------------------------------------
-   TYPOGRAPHY
+   GENERAL FEATURES AS A CLASSIC WINDOW
    ------------------------------------------------- */
-form.max-w-4xl > h2 {
-  color: var(--ink) !important;
-  font-size: clamp(2rem, 4.8vw, 3rem) !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.035em !important;
-  text-align: left !important;
-  text-shadow: none !important;
-  margin-bottom: 2.25rem !important;
-  padding-bottom: 0.9rem;
-  border-bottom: 2px solid var(--ink);
+form.max-w-4xl.bg-gradient-to-r {
+  padding-top: .5rem !important;
 }
 
-.max-w-4xl.bg-white > div:first-child h2,
-.max-w-4xl.bg-white > div:first-child h3 {
-  letter-spacing: -0.025em !important;
-}
-
-/* Credit Cards header becomes a ruled editorial header, not a card hero. */
-.max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 {
-  border-bottom: 2px solid var(--ink);
-  padding-bottom: 1rem;
-  margin-bottom: 0 !important;
-}
-
-.max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 h3 {
-  font-size: 2rem !important;
-  line-height: 1 !important;
-  font-weight: 700 !important;
-}
-
-/* -------------------------------------------------
-   INPUTS — PLAIN INK-ON-PAPER CONTROLS
-   ------------------------------------------------- */
-input,
-select,
-textarea {
-  background: var(--paper-3) !important;
-  color: var(--ink) !important;
-  border: 1px solid #9e9a90 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  outline: none !important;
-  transition: border-color 100ms ease, background 100ms ease !important;
-}
-
-input:hover,
-select:hover,
-textarea:hover {
-  background: #fff !important;
-  border-color: #6e6b64 !important;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  background: #fff !important;
-  border-color: var(--ink) !important;
-  box-shadow: inset 0 -2px 0 var(--ink) !important;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: #8c8981 !important;
-}
-
-select option {
-  background: #fff;
-  color: var(--ink);
-}
-
-input[type="checkbox"] {
-  accent-color: var(--ink);
-}
-
-/* -------------------------------------------------
-   BUTTONS — INK / PAPER, NOT SAAS PILLS
-   ------------------------------------------------- */
-button {
-  box-shadow: none !important;
-  font-weight: 700 !important;
-  letter-spacing: 0 !important;
-  border-radius: 0 !important;
-  transition: background 100ms ease, color 100ms ease, border-color 100ms ease !important;
-}
-
-button:active {
-  transform: none !important;
-}
-
-button.bg-indigo-600,
-button.bg-indigo-700,
-button.bg-blue-600,
-button.bg-gradient-to-r {
-  background: var(--ink) !important;
-  background-image: none !important;
-  color: #f8f6ef !important;
-  border: 1px solid var(--ink) !important;
-}
-
-button.bg-indigo-600:hover,
-button.bg-indigo-700:hover,
-button.bg-blue-600:hover,
-button.bg-gradient-to-r:hover {
-  background: #000 !important;
-  border-color: #000 !important;
-}
-
-button.bg-indigo-100,
-button.bg-white {
-  background: transparent !important;
-  color: var(--ink) !important;
-  border: 1px solid #88847a !important;
-}
-
-button.bg-indigo-100:hover,
-button.bg-white:hover {
-  background: var(--ink) !important;
-  color: #fff !important;
-  border-color: var(--ink) !important;
-}
-
-button.bg-red-500,
-button.bg-red-600 {
-  background: transparent !important;
-  color: var(--red) !important;
-  border: 1px solid #b98d90 !important;
-}
-
-button.bg-red-500:hover,
-button.bg-red-600:hover {
-  background: var(--red) !important;
-  color: #fff !important;
-  border-color: var(--red) !important;
-}
-
-/* -------------------------------------------------
-   GENERAL FEATURES — EDITORIAL PLAN SHEET
-   ------------------------------------------------- */
 form.max-w-4xl.bg-gradient-to-r::before {
   display: none !important;
 }
 
-form.max-w-4xl .bg-white,
-form.max-w-4xl .bg-white\/95 {
-  background: var(--paper-3) !important;
-  background-image: none !important;
-  color: var(--ink) !important;
-  border: 1px solid var(--rule) !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+form.max-w-4xl > h2 {
+  background: var(--win-blue) !important;
+  color: var(--win-white) !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  text-align: left !important;
+  text-shadow: none !important;
+  margin: 0 0 1.25rem 0 !important;
+  padding: .42rem .55rem !important;
+  border: 0 !important;
 }
 
-/* Make the planning summary read like a black financial footer strip. */
-form.max-w-4xl section:last-of-type {
-  background: var(--ink) !important;
-  background-image: none !important;
-  color: #f6f3eb !important;
+form.max-w-4xl .bg-white,
+form.max-w-4xl .bg-white\/95 {
+  background: var(--win-gray-light) !important;
+  color: var(--win-black) !important;
   border: 0 !important;
   border-radius: 0 !important;
-  box-shadow: none !important;
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset -1px -1px 0 var(--win-gray-mid) !important;
+}
+
+/* Planning summary: classic inset information panel. */
+form.max-w-4xl section:last-of-type {
+  background: var(--win-gray-light) !important;
+  color: var(--win-black) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-mid),
+    inset 2px 2px 0 var(--win-black),
+    inset -1px -1px 0 var(--win-white),
+    inset -2px -2px 0 var(--win-gray) !important;
 }
 
 form.max-w-4xl section:last-of-type h3,
@@ -307,158 +206,273 @@ form.max-w-4xl section:last-of-type p,
 form.max-w-4xl section:last-of-type span,
 form.max-w-4xl section:last-of-type strong,
 form.max-w-4xl section:last-of-type div {
-  color: #f6f3eb !important;
+  color: var(--win-black) !important;
 }
 
 form.max-w-4xl section:last-of-type .bg-indigo-50,
 form.max-w-4xl section:last-of-type .bg-green-50,
 form.max-w-4xl section:last-of-type .bg-red-50 {
-  background: #1e1e1b !important;
-  border: 1px solid #3b3b36 !important;
+  background: var(--win-white) !important;
+  color: var(--win-black) !important;
   border-radius: 0 !important;
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-mid),
+    inset -1px -1px 0 var(--win-white) !important;
 }
 
 form.max-w-4xl canvas {
   max-height: 330px;
+  background: var(--win-white);
 }
 
 /* -------------------------------------------------
-   CREDIT CARDS — LEDGER ROWS INSTEAD OF NESTED CARDS
+   CREDIT CARDS: CLASSIC WINDOW HEADER + LEDGER ROWS
    ------------------------------------------------- */
+.max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 {
+  background: var(--win-blue) !important;
+  margin: -.75rem -.75rem 0 -.75rem !important;
+  padding: .5rem .6rem !important;
+  border: 0 !important;
+  color: var(--win-white) !important;
+}
+
+.max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 h3,
+.max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 p,
+.max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 .text-gray-400,
+.max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 .text-gray-500 {
+  color: var(--win-white) !important;
+}
+
+.max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 h3 {
+  font-size: 1.25rem !important;
+  line-height: 1.1 !important;
+  font-weight: 700 !important;
+}
+
+.max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 button {
+  background: var(--win-gray) !important;
+  color: var(--win-black) !important;
+}
+
 .rounded-2xl.bg-indigo-50,
 .rounded-xl.bg-indigo-50 {
-  background: transparent !important;
+  background: var(--win-gray-light) !important;
   border: 0 !important;
-  border-top: 1px solid var(--rule) !important;
-  border-bottom: 1px solid var(--rule) !important;
   border-radius: 0 !important;
+  box-shadow:
+    inset 0 1px 0 var(--win-white),
+    inset 0 -1px 0 var(--win-gray-mid) !important;
 }
 
 .max-w-4xl.bg-white .space-y-4 {
-  margin-top: 0;
+  margin-top: 0 !important;
 }
 
 .max-w-4xl.bg-white .space-y-4 > :not([hidden]) ~ :not([hidden]) {
-  margin-top: -1px !important;
-}
-
-.max-w-4xl.bg-white .rounded-2xl.bg-indigo-50 {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  margin-top: 2px !important;
 }
 
 .max-w-4xl.bg-white .rounded-2xl.bg-indigo-50 .bg-white,
-.max-w-4xl.bg-white .rounded-2xl.bg-indigo-50 .dark\:bg-gray-900 {
-  background: transparent !important;
-  border: 0 !important;
-  color: var(--ink) !important;
+.max-w-4xl.bg-white .rounded-2xl.bg-indigo-50 .dark\\:bg-gray-900 {
+  background: var(--win-white) !important;
+  color: var(--win-black) !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-mid),
+    inset -1px -1px 0 var(--win-white) !important;
 }
 
-/* Used figure gets typographic emphasis instead of another filled card. */
 .max-w-4xl.bg-white .rounded-2xl.bg-indigo-50 .font-extrabold {
-  font-size: 1.2rem !important;
-  letter-spacing: -0.02em;
+  font-size: 1.15rem !important;
 }
 
-/* Bottom card summary becomes a ruled footer. */
 .max-w-4xl.bg-white > .mt-5.flex.flex-wrap.gap-3.items-end {
-  border-top: 2px solid var(--ink);
-  padding-top: 1rem;
+  border-top: 2px groove var(--win-white) !important;
+  padding-top: 1rem !important;
 }
 
 .max-w-4xl.bg-white > .mt-5 .flex-1.min-w-48 {
-  background: transparent !important;
+  background: var(--win-white) !important;
   border: 0 !important;
-  border-left: 4px solid var(--accent) !important;
   border-radius: 0 !important;
-  padding-left: 1rem !important;
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-mid),
+    inset 2px 2px 0 var(--win-black),
+    inset -1px -1px 0 var(--win-white),
+    inset -2px -2px 0 var(--win-gray) !important;
 }
 
 /* -------------------------------------------------
-   MONTH NAVIGATION — LIKE AN INDEX STRIP
+   INPUTS — WHITE, INSET, CLASSIC
+   ------------------------------------------------- */
+input,
+textarea {
+  background: var(--win-white) !important;
+  color: var(--win-black) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow:
+    inset 1px 1px 0 var(--win-gray-mid),
+    inset 2px 2px 0 var(--win-black),
+    inset -1px -1px 0 var(--win-white),
+    inset -2px -2px 0 var(--win-gray-light) !important;
+}
+
+select {
+  background: var(--win-gray) !important;
+  color: var(--win-black) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 1px dotted var(--win-black) !important;
+  outline-offset: -4px !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--win-gray-mid) !important;
+}
+
+select option {
+  background: var(--win-white);
+  color: var(--win-black);
+}
+
+input[type="checkbox"] {
+  accent-color: var(--win-blue);
+}
+
+/* -------------------------------------------------
+   BUTTON COLORS
+   ------------------------------------------------- */
+button {
+  background: var(--win-gray) !important;
+  color: var(--win-black) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  transition: none !important;
+}
+
+button:hover {
+  background: #d4d4d4 !important;
+}
+
+button.bg-indigo-600,
+button.bg-indigo-700,
+button.bg-blue-600,
+button.bg-gradient-to-r {
+  background: var(--win-gray) !important;
+  background-image: none !important;
+  color: var(--win-black) !important;
+}
+
+/* Strong destructive controls: unmistakable Win98 red. */
+button.bg-red-500,
+button.bg-red-600 {
+  background: var(--win-red) !important;
+  color: var(--win-white) !important;
+}
+
+button.bg-red-500:hover,
+button.bg-red-600:hover {
+  background: #e00000 !important;
+  color: var(--win-white) !important;
+}
+
+/* Keep logout less alarming than row-delete buttons. */
+header.sticky button.bg-red-600 {
+  background: var(--win-gray) !important;
+  color: var(--win-red) !important;
+}
+
+/* -------------------------------------------------
+   MONTH NAVIGATION — WINDOWS TAB STRIP
    ------------------------------------------------- */
 button.bg-indigo-600.text-white {
-  background: var(--ink) !important;
-  color: #fff !important;
-  border: 1px solid var(--ink) !important;
-  border-radius: 0 !important;
+  background: var(--win-blue) !important;
+  color: var(--win-white) !important;
+  box-shadow:
+    inset 1px 1px 0 #ffffff,
+    inset 2px 2px 0 var(--win-blue-light),
+    inset -1px -1px 0 #000000,
+    inset -2px -2px 0 #000050 !important;
 }
 
 button.bg-indigo-100.text-gray-800 {
-  background: transparent !important;
-  color: var(--ink-soft) !important;
-  border: 0 !important;
-  border-bottom: 1px solid #8d897f !important;
-  border-radius: 0 !important;
+  background: var(--win-gray) !important;
+  color: var(--win-black) !important;
 }
 
 button.bg-indigo-100.text-gray-800:hover {
-  background: var(--paper-2) !important;
-  color: var(--ink) !important;
+  background: #d7d7d7 !important;
 }
 
 /* -------------------------------------------------
-   TABLES — BANK STATEMENT / LEDGER FEEL
+   TABLES — WINDOWS GRID / BANK STATEMENT
    ------------------------------------------------- */
 table {
-  background: var(--paper-3) !important;
-  background-image: none !important;
-  color: var(--ink) !important;
-  border: 1px solid var(--ink) !important;
+  background: var(--win-white) !important;
+  color: var(--win-black) !important;
+  border: 2px solid var(--win-gray-mid) !important;
   border-radius: 0 !important;
   border-collapse: collapse !important;
   border-spacing: 0 !important;
-  box-shadow: none !important;
+  box-shadow:
+    inset 1px 1px 0 var(--win-black),
+    inset -1px -1px 0 var(--win-white) !important;
 }
 
 thead,
 thead.bg-indigo-600 {
-  background: var(--ink) !important;
-  color: #f8f6ef !important;
+  background: var(--win-blue) !important;
+  color: var(--win-white) !important;
 }
 
 thead th {
-  color: #f8f6ef !important;
-  font-size: 0.82rem !important;
+  background: var(--win-blue) !important;
+  color: var(--win-white) !important;
+  font-size: .82rem !important;
   font-weight: 700 !important;
-  letter-spacing: 0.015em !important;
-  border: 1px solid var(--ink) !important;
+  letter-spacing: 0 !important;
+  border: 1px solid #000050 !important;
 }
 
 tbody tr,
 tbody tr.bg-indigo-50,
 tbody tr:nth-child(even) {
-  background: var(--paper-3) !important;
-  color: var(--ink) !important;
+  background: var(--win-white) !important;
+  color: var(--win-black) !important;
 }
 
 tbody tr:nth-child(even) {
-  background: #e9e6dc !important;
+  background: #eeeeee !important;
 }
 
 tbody tr:hover {
-  background: #dedacf !important;
+  background: #dbe8f7 !important;
 }
 
 tbody td {
-  color: var(--ink-soft) !important;
-  border: 1px solid #c3beb2 !important;
+  color: var(--win-black) !important;
+  border: 1px solid var(--win-gray-mid) !important;
 }
 
 /* -------------------------------------------------
    LEGACY TAILWIND COLOR REMAP
    ------------------------------------------------- */
-.bg-indigo-50 {
-  background-color: var(--paper-2) !important;
-}
-
-.bg-indigo-100 {
-  background-color: var(--paper-2) !important;
+.bg-indigo-50,
+.bg-indigo-100,
+.bg-gray-800,
+.bg-gray-900 {
+  background-color: var(--win-gray-light) !important;
 }
 
 .bg-indigo-600,
 .bg-indigo-700 {
-  background-color: var(--ink) !important;
+  background-color: var(--win-blue) !important;
 }
 
 .text-indigo-800,
@@ -467,42 +481,31 @@ tbody td {
 .text-indigo-500,
 .text-indigo-400,
 .text-indigo-300,
-.text-blue-600 {
-  color: var(--ink) !important;
-}
-
+.text-blue-600,
 .text-gray-300,
-.text-gray-700,
-.text-gray-800 {
-  color: var(--ink-soft) !important;
-}
-
 .text-gray-400,
 .text-gray-500,
-.text-gray-600 {
-  color: var(--muted) !important;
-}
-
-.bg-gray-800,
-.bg-gray-900 {
-  background-color: var(--paper-2) !important;
+.text-gray-600,
+.text-gray-700,
+.text-gray-800 {
+  color: var(--win-black) !important;
 }
 
 .bg-green-50 {
-  background-color: #e0eadf !important;
+  background-color: #d8f0d8 !important;
 }
 
 .text-green-700,
 .text-green-400 {
-  color: var(--green) !important;
+  color: var(--win-green) !important;
 }
 
 .bg-red-50 {
-  background-color: #efe0df !important;
+  background-color: #f3d4d4 !important;
 }
 
 .text-red-700 {
-  color: var(--red) !important;
+  color: var(--win-red) !important;
 }
 
 .ring-gray-200,
@@ -513,40 +516,6 @@ tbody td {
   --tw-ring-color: transparent !important;
 }
 
-/* -------------------------------------------------
-   LOGIN — PAPER SHEET ON A DARK DESK
-   ------------------------------------------------- */
-form.max-w-md {
-  padding: 2rem !important;
-  background: var(--paper) !important;
-  color: var(--ink) !important;
-  border: 1px solid #353531 !important;
-  border-top: 5px solid #f8f6ef !important;
-  border-radius: 2px !important;
-  box-shadow: none !important;
-}
-
-form.max-w-md h1,
-form.max-w-md label,
-form.max-w-md p {
-  color: var(--ink) !important;
-}
-
-form.max-w-md h1 {
-  font-size: 2rem !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.03em !important;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid var(--ink);
-}
-
-form.max-w-md button {
-  background: var(--ink) !important;
-  color: #fff !important;
-  border: 1px solid var(--ink) !important;
-  border-radius: 0 !important;
-}
-
 .shadow-2xl,
 .shadow-xl,
 .shadow-md {
@@ -555,24 +524,55 @@ form.max-w-md button {
 }
 
 /* -------------------------------------------------
+   LOGIN WINDOW
+   ------------------------------------------------- */
+form.max-w-md {
+  background: var(--win-gray) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 1px 1px 0 var(--win-white),
+    inset 2px 2px 0 var(--win-gray-light),
+    inset -1px -1px 0 var(--win-black),
+    inset -2px -2px 0 var(--win-gray-mid),
+    4px 4px 0 rgba(0,0,0,.35) !important;
+}
+
+form.max-w-md h1 {
+  background: var(--win-blue) !important;
+  color: var(--win-white) !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  margin: -.75rem -.75rem 1rem -.75rem !important;
+  padding: .4rem .55rem !important;
+}
+
+form.max-w-md button {
+  background: var(--win-gray) !important;
+  color: var(--win-black) !important;
+  border-radius: 0 !important;
+}
+
+/* -------------------------------------------------
    MOBILE
    ------------------------------------------------- */
 @media (max-width: 640px) {
   .min-h-screen.p-8 {
-    padding: 0.6rem !important;
+    padding: .5rem !important;
   }
 
   form.max-w-4xl,
   .max-w-4xl.bg-white {
-    padding: 1rem !important;
+    padding: .75rem !important;
     border-radius: 0 !important;
   }
 
-  form.max-w-4xl > h2 {
-    margin-bottom: 1.5rem !important;
+  .max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 {
+    margin: -.75rem -.75rem 0 -.75rem !important;
   }
 
-  .max-w-4xl.bg-white > .flex.flex-wrap.items-center.justify-between.gap-3.mb-5 h3 {
-    font-size: 1.65rem !important;
+  form.max-w-4xl > h2 {
+    font-size: 1.1rem !important;
   }
 }
