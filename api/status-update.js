@@ -17,12 +17,40 @@ function last4(value) {
   return String(value || "").replace(/\D/g, "").slice(-4);
 }
 
+function getDubaiDateParts(date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Dubai",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(date);
+
+  return Object.fromEntries(
+    parts
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, Number(part.value)])
+  );
+}
+
 function getBudgetPeriod(date) {
-  const period = new Date(date);
-  if (period.getDate() >= 27) period.setMonth(period.getMonth() + 1);
+  const parts = getDubaiDateParts(date);
+  let year = parts.year;
+  let monthIndex = parts.month - 1;
+
+  // From the 27th onward, use the next salary-cycle month. Do arithmetic on
+  // the month index instead of Date#setMonth so the 31st cannot overflow into
+  // an extra month (for example 31 August -> October).
+  if (parts.day >= 27) {
+    monthIndex += 1;
+    if (monthIndex === 12) {
+      monthIndex = 0;
+      year += 1;
+    }
+  }
+
   return {
-    year: String(period.getFullYear()),
-    month: months[period.getMonth()],
+    year: String(year),
+    month: months[monthIndex],
   };
 }
 
