@@ -2,3 +2,360 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --sb-bg: #f5f5f7;
+  --sb-surface: #ffffff;
+  --sb-surface-soft: #fbfbfd;
+  --sb-fill: #f0f0f2;
+  --sb-text: #1d1d1f;
+  --sb-muted: #6e6e73;
+  --sb-border: #d9d9de;
+  --sb-border-soft: rgba(0, 0, 0, 0.08);
+  --sb-blue: #0071e3;
+  --sb-blue-hover: #0077ed;
+  --sb-blue-soft: #eaf3fd;
+  --sb-green: #248a3d;
+  --sb-green-soft: #eff8f1;
+  --sb-red: #d70015;
+  --sb-red-soft: #fff0f1;
+  --sb-shadow: 0 18px 50px rgba(0, 0, 0, 0.055), 0 2px 8px rgba(0, 0, 0, 0.035);
+  --sb-shadow-soft: 0 6px 24px rgba(0, 0, 0, 0.045), 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+html {
+  background: var(--sb-bg);
+}
+
+body {
+  margin: 0;
+  background: var(--sb-bg);
+  color: var(--sb-text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.01em;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(0, 113, 227, 0.16);
+}
+
+/* App canvas: calm neutral background instead of decorative gradients. */
+.min-h-screen.bg-gradient-to-tr,
+.min-h-screen.bg-indigo-50 {
+  background: var(--sb-bg) !important;
+  background-image: none !important;
+}
+
+.min-h-screen.bg-gray-950 {
+  background: var(--sb-bg) !important;
+  color: var(--sb-text) !important;
+}
+
+/* Top navigation: translucent, quiet, and closer to a native app toolbar. */
+header.sticky {
+  background: rgba(255, 255, 255, 0.86) !important;
+  border-color: var(--sb-border-soft) !important;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.045) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  backdrop-filter: saturate(180%) blur(18px);
+}
+
+header.sticky .text-indigo-700,
+header.sticky .text-indigo-300 {
+  color: var(--sb-text) !important;
+}
+
+header.sticky button.bg-red-600 {
+  background: transparent !important;
+  color: var(--sb-red) !important;
+  border: 1px solid rgba(215, 0, 21, 0.18) !important;
+  box-shadow: none !important;
+}
+
+header.sticky button.bg-red-600:hover {
+  background: var(--sb-red-soft) !important;
+}
+
+/* Shared elevated surfaces. */
+.max-w-4xl.bg-white,
+.max-w-md.bg-white {
+  background: var(--sb-surface) !important;
+  border: 1px solid var(--sb-border-soft) !important;
+  box-shadow: var(--sb-shadow) !important;
+  border-radius: 26px !important;
+}
+
+/* General Features: remove the AI-style multicolor hero treatment. */
+form.max-w-4xl.bg-gradient-to-r {
+  background: var(--sb-surface) !important;
+  background-image: none !important;
+  color: var(--sb-text) !important;
+  border: 1px solid var(--sb-border-soft) !important;
+  box-shadow: var(--sb-shadow) !important;
+  border-radius: 28px !important;
+}
+
+form.max-w-4xl > h2 {
+  color: var(--sb-text) !important;
+  font-size: clamp(2.35rem, 6vw, 3.25rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.045em !important;
+  margin-bottom: 2.5rem !important;
+}
+
+form.max-w-4xl label,
+form.max-w-4xl h3 {
+  color: var(--sb-text) !important;
+}
+
+form.max-w-4xl p {
+  color: var(--sb-muted) !important;
+}
+
+form.max-w-4xl .bg-white {
+  background: var(--sb-surface-soft) !important;
+  border: 1px solid var(--sb-border-soft) !important;
+  box-shadow: var(--sb-shadow-soft) !important;
+  border-radius: 18px !important;
+}
+
+form.max-w-4xl section:last-of-type {
+  background: var(--sb-surface-soft) !important;
+  border: 1px solid var(--sb-border-soft) !important;
+  box-shadow: none !important;
+  border-radius: 22px !important;
+}
+
+form.max-w-4xl canvas {
+  max-height: 330px;
+}
+
+/* Inputs: simple native-finance-app controls. */
+input,
+select,
+textarea {
+  background: #ffffff !important;
+  color: var(--sb-text) !important;
+  border: 1px solid var(--sb-border) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: #c4c4ca !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--sb-blue) !important;
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.11) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #98989d !important;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--sb-blue);
+}
+
+/* Buttons: restrained shapes and one clear accent color. */
+button {
+  box-shadow: none !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.015em;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease, transform 100ms ease, opacity 150ms ease !important;
+}
+
+button:active {
+  transform: scale(0.985);
+}
+
+button.bg-indigo-600,
+button.bg-indigo-700,
+button.bg-blue-600 {
+  background: var(--sb-blue) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--sb-blue) !important;
+}
+
+button.bg-indigo-600:hover,
+button.bg-indigo-700:hover,
+button.bg-blue-600:hover {
+  background: var(--sb-blue-hover) !important;
+  border-color: var(--sb-blue-hover) !important;
+}
+
+button.bg-indigo-100 {
+  background: #ffffff !important;
+  color: #3a3a3c !important;
+  border: 1px solid var(--sb-border) !important;
+}
+
+button.bg-indigo-100:hover {
+  background: var(--sb-fill) !important;
+}
+
+button.bg-gradient-to-r {
+  background: var(--sb-fill) !important;
+  background-image: none !important;
+  color: var(--sb-text) !important;
+  border: 1px solid var(--sb-border) !important;
+}
+
+button.bg-gradient-to-r:hover {
+  background: #e7e7ea !important;
+  background-image: none !important;
+}
+
+button.bg-red-500,
+button.bg-red-600 {
+  background: var(--sb-red) !important;
+  border-color: var(--sb-red) !important;
+}
+
+/* Re-map the old indigo-heavy palette into a restrained product palette. */
+.bg-indigo-50 {
+  background-color: var(--sb-surface-soft) !important;
+}
+
+.bg-indigo-100 {
+  background-color: var(--sb-blue-soft) !important;
+}
+
+.bg-indigo-600,
+.bg-indigo-700 {
+  background-color: var(--sb-blue) !important;
+}
+
+.text-indigo-800,
+.text-indigo-700 {
+  color: var(--sb-text) !important;
+}
+
+.text-indigo-600,
+.text-indigo-500,
+.text-indigo-400,
+.text-blue-600 {
+  color: var(--sb-blue) !important;
+}
+
+.text-gray-400,
+.text-gray-500,
+.text-gray-600 {
+  color: var(--sb-muted) !important;
+}
+
+.bg-green-50 {
+  background-color: var(--sb-green-soft) !important;
+}
+
+.text-green-700 {
+  color: var(--sb-green) !important;
+}
+
+.bg-red-50 {
+  background-color: var(--sb-red-soft) !important;
+}
+
+.text-red-700 {
+  color: var(--sb-red) !important;
+}
+
+/* Budget tables: finance-ledger feel rather than a saturated dashboard table. */
+table {
+  background: var(--sb-surface) !important;
+  border: 1px solid var(--sb-border-soft) !important;
+  border-radius: 18px;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  overflow: hidden;
+}
+
+thead.bg-indigo-600 {
+  background: var(--sb-fill) !important;
+  color: var(--sb-text) !important;
+}
+
+thead th {
+  color: var(--sb-text) !important;
+  font-size: 0.82rem !important;
+  font-weight: 650 !important;
+  letter-spacing: 0.01em;
+  border-bottom: 1px solid var(--sb-border-soft);
+}
+
+tbody tr,
+tbody tr.bg-indigo-50 {
+  background: #ffffff !important;
+}
+
+tbody tr:hover {
+  background: var(--sb-surface-soft) !important;
+}
+
+tbody td {
+  border-bottom: 1px solid var(--sb-border-soft);
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* The login screen should feel like the same product, not a separate template. */
+form.max-w-md {
+  padding: 2.25rem !important;
+}
+
+form.max-w-md h1 {
+  color: var(--sb-text) !important;
+  font-size: 2.5rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.045em !important;
+}
+
+form.max-w-md button {
+  background: var(--sb-blue) !important;
+  color: white !important;
+  border: 1px solid var(--sb-blue) !important;
+  border-radius: 12px !important;
+}
+
+/* Tone down legacy ring/shadow utilities when used on main surfaces. */
+.shadow-2xl,
+.shadow-xl,
+.shadow-md {
+  --tw-shadow: none !important;
+}
+
+@media (max-width: 640px) {
+  .min-h-screen.p-8 {
+    padding: 1rem !important;
+  }
+
+  form.max-w-4xl,
+  .max-w-4xl.bg-white {
+    padding: 1.25rem !important;
+    border-radius: 22px !important;
+  }
+
+  form.max-w-4xl > h2 {
+    margin-bottom: 2rem !important;
+  }
+}
