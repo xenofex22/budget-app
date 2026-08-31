@@ -1,17 +1,58 @@
 import { useState, useEffect } from "react";
-import { Pie } from "react-chartjs-2";  // Import Pie chart component from Chart.js
+import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
-// Register chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function getCurrentSalaryCycle(date = new Date()) {
+  const today = new Date(date);
+  let startYear = today.getFullYear();
+  let startMonth = today.getMonth();
+
+  if (today.getDate() < 27) {
+    startMonth -= 1;
+    if (startMonth < 0) {
+      startMonth = 11;
+      startYear -= 1;
+    }
+  }
+
+  const start = new Date(startYear, startMonth, 27);
+  const end = new Date(startYear, startMonth + 1, 26);
+  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+  const days = Math.round((endUtc - startUtc) / DAY_MS) + 1;
+
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
+
+  return {
+    days,
+    label: `${formatter.format(start)} – ${formatter.format(end)}`,
+  };
+}
+
+function formatMoney(value, currency) {
+  return `${currency} ${Number(value || 0).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`;
+}
 
 function GeneralFeatures({ onSubmit, savedData }) {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(savedData?.year || currentYear);
-  const [primarySalary, setPrimarySalary] = useState(savedData?.primarySalary || ""); // Primary salary
-  const [familySalary, setFamilySalary] = useState(savedData?.familySalary || "");    // Family salary (optional)
-  const [currency, setCurrency] = useState(savedData?.currency || "AED");  // Default currency is AED
-  const [expenses, setExpenses] = useState(savedData?.expenses || Array(3).fill({ name: "", actual: "" }));  // Default 3 rows
+  const [primarySalary, setPrimarySalary] = useState(savedData?.primarySalary || "");
+  const [familySalary, setFamilySalary] = useState(savedData?.familySalary || "");
+  const [currency, setCurrency] = useState(savedData?.currency || "AED");
+  const [dailySpendTarget, setDailySpendTarget] = useState(savedData?.dailySpendTarget ?? 450);
+  const [expenses, setExpenses] = useState(
+    savedData?.expenses || Array.from({ length: 3 }, () => ({ name: "", actual: "" }))
+  );
 
   useEffect(() => {
     if (savedData) {
@@ -19,7 +60,8 @@ function GeneralFeatures({ onSubmit, savedData }) {
       setPrimarySalary(savedData.primarySalary);
       setFamilySalary(savedData.familySalary);
       setCurrency(savedData.currency);
-      setExpenses(savedData.expenses);
+      setDailySpendTarget(savedData.dailySpendTarget ?? 450);
+      setExpenses(savedData.expenses || []);
     }
   }, [savedData]);
 
@@ -35,13 +77,13 @@ function GeneralFeatures({ onSubmit, savedData }) {
   function handleSubmit(e) {
     e.preventDefault();
 
-    // Save primary and family salary separately
     onSubmit({
       year,
       primarySalary: Number(primarySalary),
       familySalary: Number(familySalary),
       currency,
-      expenses: expenses.filter((e) => e.name.trim() !== ""),
+      dailySpendTarget: Number(dailySpendTarget),
+      expenses: expenses.filter((expense) => expense.name.trim() !== ""),
     });
   }
 
@@ -55,7 +97,7 @@ function GeneralFeatures({ onSubmit, savedData }) {
 
   function clampYear(val) {
     const minY = 2000;
-    const maxY = currentYear + 10; // ✅ allow future years
+    const maxY = currentYear + 10;
     if (Number.isNaN(val)) return currentYear;
     return Math.min(maxY, Math.max(minY, val));
   }
@@ -64,27 +106,38 @@ function GeneralFeatures({ onSubmit, savedData }) {
     setYear((prev) => clampYear(Number(prev || currentYear) + delta));
   }
 
-  // Pie chart data preparation
+  const salaryCycle = getCurrentSalaryCycle();
+  const totalIncome = Number(primarySalary || 0) + Number(familySalary || 0);
+  const fixedExpenseTotal = expenses.reduce(
+    (sum, expense) => sum + Number(expense.actual || 0),
+    0
+  );
+  const livingBudget = Number(dailySpendTarget || 0) * salaryCycle.days;
+  const amountAfterPlan = totalIncome - fixedExpenseTotal - livingBudget;
+  const suggestedSavings = Math.max(0, amountAfterPlan);
+  const planningShortfall = Math.max(0, -amountAfterPlan);
+  const savingsRate = totalIncome > 0 ? (suggestedSavings / totalIncome) * 100 : 0;
+
   const chartData = {
-    labels: expenses.map((expense) => expense.name || "Unnamed"), // Expense names as categories
+    labels: expenses.map((expense) => expense.name || "Unnamed"),
     datasets: [
       {
-        label: 'Expenses by Category',
-        data: expenses.map((expense) => expense.actual || 0), // Actual expenses as values
+        label: "Fixed Expenses by Category",
+        data: expenses.map((expense) => expense.actual || 0),
         backgroundColor: [
-          '#4CAF50', // Green
-          '#2196F3', // Blue
-          '#FF5722', // Red
-          '#FFC107', // Amber
-          '#9C27B0', // Purple
-          '#FF9800', // Orange
-          '#8BC34A', // Light Green
-          '#03A9F4', // Light Blue
+          "#4CAF50",
+          "#2196F3",
+          "#FF5722",
+          "#FFC107",
+          "#9C27B0",
+          "#FF9800",
+          "#8BC34A",
+          "#03A9F4",
         ],
         borderColor: [
-          '#4CAF50', '#2196F3', '#FF5722',
-          '#FFC107', '#9C27B0', '#FF9800',
-          '#8BC34A', '#03A9F4',
+          "#4CAF50", "#2196F3", "#FF5722",
+          "#FFC107", "#9C27B0", "#FF9800",
+          "#8BC34A", "#03A9F4",
         ],
         borderWidth: 1,
       },
@@ -96,10 +149,10 @@ function GeneralFeatures({ onSubmit, savedData }) {
       legend: {
         labels: {
           font: {
-            weight: 'bold',
+            weight: "bold",
             size: 16,
           },
-          color: '#333',
+          color: "#333",
         },
       },
     },
@@ -114,14 +167,11 @@ function GeneralFeatures({ onSubmit, savedData }) {
         Smart Budget
       </h2>
 
-      {/* Year, Salary, and Currency Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 mb-14">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 mb-10">
         <div>
           <label htmlFor="year" className="block mb-3 font-semibold text-white text-lg">
             Year
           </label>
-
-          {/* Year input + +/- controls */}
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -132,7 +182,6 @@ function GeneralFeatures({ onSubmit, savedData }) {
             >
               −
             </button>
-
             <input
               id="year"
               type="number"
@@ -148,7 +197,6 @@ function GeneralFeatures({ onSubmit, savedData }) {
               required
               autoComplete="off"
             />
-
             <button
               type="button"
               onClick={() => incYear(1)}
@@ -194,30 +242,51 @@ function GeneralFeatures({ onSubmit, savedData }) {
         </div>
       </div>
 
-      {/* Currency Selection */}
-      <div className="mb-12">
-        <label htmlFor="currency" className="block mb-3 font-semibold text-white text-lg">
-          Currency
-        </label>
-        <select
-          id="currency"
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value)}
-          className="w-full px-5 py-4 rounded-xl border-2 border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-400 focus:border-indigo-600 bg-white text-lg"
-          required
-        >
-          <option value="USD">USD</option>
-          <option value="AED">AED</option>
-          <option value="EUR">EUR</option>
-          <option value="TRY">TRY</option>
-        </select>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
+        <div>
+          <label htmlFor="currency" className="block mb-3 font-semibold text-white text-lg">
+            Currency
+          </label>
+          <select
+            id="currency"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="w-full px-5 py-4 rounded-xl border-2 border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-400 focus:border-indigo-600 bg-white text-lg"
+            required
+          >
+            <option value="USD">USD</option>
+            <option value="AED">AED</option>
+            <option value="EUR">EUR</option>
+            <option value="TRY">TRY</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="dailySpendTarget" className="block mb-3 font-semibold text-white text-lg">
+            Daily Spend Target
+          </label>
+          <input
+            id="dailySpendTarget"
+            type="number"
+            min="0"
+            step="1"
+            value={dailySpendTarget}
+            onChange={(e) => setDailySpendTarget(e.target.value)}
+            className="w-full px-5 py-4 rounded-xl border-2 border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-400 focus:border-indigo-600 bg-white text-lg"
+          />
+          <p className="mt-2 text-sm font-semibold text-white/90">
+            Current salary cycle: {salaryCycle.label} · {salaryCycle.days} days
+          </p>
+        </div>
       </div>
 
-      {/* Expenses Section */}
       <section>
-        <h3 className="text-3xl font-bold mb-10 text-white tracking-wide text-center">
-          Expenses
+        <h3 className="text-3xl font-bold mb-3 text-white tracking-wide text-center">
+          Fixed / Recurring Expenses
         </h3>
+        <p className="text-center text-white/90 mb-10">
+          These stay as planning figures only and are not copied into monthly pages.
+        </p>
 
         {expenses.map((expense, i) => (
           <div
@@ -234,12 +303,12 @@ function GeneralFeatures({ onSubmit, savedData }) {
             />
             <input
               type="number"
-              placeholder="Actual Amount"
+              placeholder="Monthly Amount"
               min="0"
               value={expense.actual}
               onChange={(e) => handleExpenseChange(i, "actual", e.target.value)}
               className="col-span-6 px-4 py-3 rounded-lg border-2 border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-400 focus:border-indigo-600"
-              aria-label={`Actual amount for expense ${i + 1}`}
+              aria-label={`Monthly amount for expense ${i + 1}`}
             />
             <button
               type="button"
@@ -265,12 +334,68 @@ function GeneralFeatures({ onSubmit, savedData }) {
         </div>
       </section>
 
-      {/* Display Pie Chart */}
-      <div className="mt-10 text-center">
+      <section className="mt-12 bg-white/95 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h3 className="text-3xl font-extrabold text-indigo-700">Planning Dashboard</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Based only on General Features — monthly pages are not included yet.
+            </p>
+          </div>
+          <div className="text-sm font-bold text-gray-600">
+            {salaryCycle.label} · {salaryCycle.days} days
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="rounded-2xl bg-indigo-50 p-5">
+            <div className="text-sm font-bold text-gray-500">Total Income</div>
+            <div className="mt-2 text-2xl font-extrabold text-indigo-800">
+              {formatMoney(totalIncome, currency)}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-indigo-50 p-5">
+            <div className="text-sm font-bold text-gray-500">Fixed Expenses</div>
+            <div className="mt-2 text-2xl font-extrabold text-indigo-800">
+              {formatMoney(fixedExpenseTotal, currency)}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-indigo-50 p-5">
+            <div className="text-sm font-bold text-gray-500">Daily Living Budget</div>
+            <div className="mt-2 text-2xl font-extrabold text-indigo-800">
+              {formatMoney(livingBudget, currency)}
+            </div>
+            <div className="mt-1 text-xs font-semibold text-gray-500">
+              {formatMoney(dailySpendTarget, currency)} × {salaryCycle.days} days
+            </div>
+          </div>
+          <div className="rounded-2xl bg-indigo-50 p-5">
+            <div className="text-sm font-bold text-gray-500">Savings Rate</div>
+            <div className="mt-2 text-2xl font-extrabold text-indigo-800">
+              {savingsRate.toFixed(1)}%
+            </div>
+          </div>
+        </div>
+
+        <div className={`mt-6 rounded-2xl p-6 ${planningShortfall > 0 ? "bg-red-50" : "bg-green-50"}`}>
+          <div className="text-sm font-extrabold uppercase tracking-wide text-gray-500">
+            {planningShortfall > 0 ? "Planning Shortfall" : "Suggested Savings Transfer"}
+          </div>
+          <div className={`mt-2 text-4xl font-extrabold ${planningShortfall > 0 ? "text-red-700" : "text-green-700"}`}>
+            {formatMoney(planningShortfall > 0 ? planningShortfall : suggestedSavings, currency)}
+          </div>
+          <p className="mt-2 text-sm font-semibold text-gray-600">
+            {planningShortfall > 0
+              ? "Your planned fixed expenses plus daily allowance are currently above household income."
+              : "Income minus fixed expenses minus the full daily-spend allowance for this salary cycle."}
+          </p>
+        </div>
+      </section>
+
+      <div className="mt-10 text-center bg-white/95 rounded-3xl p-6">
         <Pie data={chartData} options={chartOptions} />
       </div>
 
-      {/* Submit Button */}
       <button
         type="submit"
         className="mt-16 w-full py-5 text-2xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-3xl shadow-2xl hover:from-blue-700 hover:to-indigo-800 transition-all duration-300"
