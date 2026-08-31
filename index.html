@@ -5,6 +5,22 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SmartBudget</title>
+    <style>
+      /* General Features still carries legacy Tailwind gradient classes.
+         Force the actual window surface to the Windows 98 system gray. */
+      html body form.max-w-4xl.bg-gradient-to-r.from-indigo-400.via-purple-500.to-pink-500 {
+        background: #c0c0c0 !important;
+        background-image: none !important;
+        border-radius: 0 !important;
+        border: 0 !important;
+        box-shadow:
+          inset 1px 1px 0 #ffffff,
+          inset 2px 2px 0 #dfdfdf,
+          inset -1px -1px 0 #000000,
+          inset -2px -2px 0 #808080,
+          3px 3px 0 rgba(0, 0, 0, 0.28) !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
