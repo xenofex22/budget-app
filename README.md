@@ -69,3 +69,24 @@ Example JSON body:
 ```
 
 The endpoint is intentionally write-only. The device token cannot read budget information. The intended Shortcut should parse the bank message locally and send only structured fields, not the full SMS text, OTPs, or authentication messages.
+
+
+## iPhone Message automation for Daily Spend
+
+Create a Personal Automation in the iPhone Shortcuts app:
+
+1. Trigger: **Message**
+2. Sender: choose the bank sender(s)
+3. Optionally set **Message Contains** to a stable purchase phrase used by the bank, such as "spent", "purchase", or "transaction".
+4. Add a **Get Contents of URL** action:
+   - URL: `https://budget-app-zeta-silk.vercel.app/api/transactions`
+   - Method: `POST`
+   - Request Body: `JSON`
+   - Header: `X-Device-Token` = your `SMS_DEVICE_TOKEN`
+   - JSON field: `rawMessage` = the incoming Message variable
+   - JSON field: `sender` = the incoming Sender variable, if available
+5. Allow the automation to run automatically / while locked.
+
+Smart Budget parses amount, currency, and merchant from normal purchase alerts. OTP, PIN, password, passcode, CVV, and verification-code messages are rejected and never stored.
+
+New unknown purchases enter **Daily Spend → Pending**. If Smart Budget is already open, the app polls for new pending purchases and opens the Daily Spend page automatically. Remembered merchants continue to classify automatically.
