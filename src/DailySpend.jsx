@@ -207,7 +207,7 @@ function DailySpend({ onBack }) {
 
   const actualAverage = completedDays > 0 ? completedSpend / completedDays : 0;
   const forecastAverage = completedDays >= 7 ? actualAverage : startingEstimate;
-  const yearEnd = new Date(now.getFullYear(), 11, 31);
+  const yearEnd = new Date(now.getFullYear(), 11, 27);
   const daysRemaining = daysBetweenInclusive(today, yearEnd);
   const projectedAdditionalSaving =
     (dailyAllowance - forecastAverage) * daysRemaining;
@@ -267,7 +267,7 @@ function DailySpend({ onBack }) {
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="md:col-span-2 rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 shadow-xl">
           <div className="text-sm font-extrabold uppercase tracking-wide text-white/75">
-            Until End of Year
+            Until 27 December
           </div>
           <div className="mt-2 text-4xl font-extrabold">
             {formatMoney(projectedAdditionalSaving, currency)}
