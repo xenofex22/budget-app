@@ -55,6 +55,7 @@ function BudgetApp() {
   const [currentView, setCurrentView] = useState("general");
   const [selectedYear, setSelectedYear] = useState(initialPeriod.year);
   const [monthTabsKey, setMonthTabsKey] = useState(0);
+  const pendingSeen = useRef(new Set());
 
   useEffect(() => {
     const savedData = localStorage.getItem(BUDGET_KEY);
@@ -75,6 +76,42 @@ function BudgetApp() {
     } catch {
       // Ignore malformed browser cache.
     }
+  }, []);
+
+  useEffect(() => {
+    let disposed = false;
+
+    async function checkPendingSpend() {
+      try {
+        const response = await fetch("/api/daily-spend", {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const pending = (data.transactions || []).filter(
+          (item) => !item.classification || item.classification === "pending"
+        );
+
+        const newPending = pending.filter((item) => !pendingSeen.current.has(item.id));
+        pending.forEach((item) => pendingSeen.current.add(item.id));
+
+        if (!disposed && newPending.length > 0) {
+          setCurrentView("daily");
+        }
+      } catch {
+        // A temporary network issue should not interrupt normal budgeting.
+      }
+    }
+
+    void checkPendingSpend();
+    const timer = setInterval(checkPendingSpend, 3000);
+
+    return () => {
+      disposed = true;
+      clearInterval(timer);
+    };
   }, []);
 
   function handleGeneralSubmit(data) {
