@@ -117,7 +117,20 @@ function DailySpend({ onBack }) {
   }
 
   useEffect(() => {
-    void load();
+    let disposed = false;
+
+    async function refresh() {
+      if (disposed) return;
+      await load();
+    }
+
+    void refresh();
+    const timer = setInterval(refresh, 3000);
+
+    return () => {
+      disposed = true;
+      clearInterval(timer);
+    };
   }, []);
 
   async function classify(transaction, classification) {
@@ -246,7 +259,7 @@ function DailySpend({ onBack }) {
             Daily Spend
           </h2>
           <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mt-1">
-            Review purchases once, then let remembered merchants classify future ones.
+            New purchase SMS alerts arrive here automatically for classification.
           </p>
         </div>
         <button
@@ -370,7 +383,7 @@ function DailySpend({ onBack }) {
           <div className="p-8 text-center font-semibold text-gray-500">Loading…</div>
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center font-semibold text-gray-500">
-            Nothing here yet.
+            No pending transactions. New purchase SMS alerts will appear here automatically.
           </div>
         ) : (
           <div className="divide-y dark:divide-gray-700">
