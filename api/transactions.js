@@ -1,5 +1,12 @@
 const crypto = require("node:crypto");
-const { command, transactionsKey } = require("../lib/server/store");
+const {
+  command,
+  dailySpendSettingsKey,
+  getJson,
+  merchantRulesKey,
+  setJson,
+  transactionsKey,
+} = require("../lib/server/store");
 
 function safeEqual(a, b) {
   const left = Buffer.from(String(a || ""));
@@ -10,6 +17,10 @@ function safeEqual(a, b) {
 
 function cleanText(value, max = 120) {
   return String(value || "").replace(/[\r\n\t]+/g, " ").trim().slice(0, max);
+}
+
+function merchantKey(value) {
+  return cleanText(value, 100).toUpperCase().replace(/\s+/g, " ");
 }
 
 module.exports = async function handler(req, res) {
@@ -39,12 +50,21 @@ module.exports = async function handler(req, res) {
   if (availableLimit !== null && !Number.isFinite(availableLimit)) return res.status(400).json({ error: "Invalid available limit" });
   if (balance !== null && !Number.isFinite(balance)) return res.status(400).json({ error: "Invalid balance" });
 
-  const transaction = {
+  const merchant = cleanText(body.merchant, 100);
+
+  try {
+    const rules = (await getJson(merchantRulesKey(username), {})) || {};
+    const remembered = rules[merchantKey(merchant)];
+    const classification = ["daily_spend", "already_budgeted", "ignored"].includes(remembered)
+      ? remembered
+      : "pending";
+
+    const transaction = {
     id: crypto.randomUUID(),
     type,
     amount,
     currency: cleanText(body.currency || "AED", 5).toUpperCase(),
-    merchant: cleanText(body.merchant, 100),
+    merchant,
     account: cleanText(body.account, 50),
     cardLast4: cleanText(body.cardLast4, 4).replace(/\D/g, ""),
     availableLimit,
@@ -52,13 +72,26 @@ module.exports = async function handler(req, res) {
     occurredAt: body.occurredAt ? cleanText(body.occurredAt, 40) : new Date().toISOString(),
     source: "iphone-shortcut",
     receivedAt: new Date().toISOString(),
-    status: "inbox",
+    status: classification === "pending" ? "inbox" : "classified",
+    classification,
+    classifiedBy: classification === "pending" ? null : "merchant_rule",
   };
 
-  try {
     await command("LPUSH", transactionsKey(username), JSON.stringify(transaction));
     await command("LTRIM", transactionsKey(username), "0", "999");
-    return res.status(201).json({ ok: true, id: transaction.id });
+
+    const settingsKey = dailySpendSettingsKey(username);
+    const settings = (await getJson(settingsKey, {})) || {};
+    if (!settings.trackingStartedAt) {
+      settings.trackingStartedAt = transaction.occurredAt;
+      await setJson(settingsKey, settings);
+    }
+
+    return res.status(201).json({
+      ok: true,
+      id: transaction.id,
+      classification,
+    });
   } catch (error) {
     console.error("transaction ingest", error);
     return res.status(500).json({ error: "Could not store transaction" });
