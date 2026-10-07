@@ -55,9 +55,12 @@ module.exports = async function handler(req, res) {
   try {
     const rules = (await getJson(merchantRulesKey(username), {})) || {};
     const remembered = rules[merchantKey(merchant)];
-    const classification = ["daily_spend", "already_budgeted", "ignored"].includes(remembered)
-      ? remembered
-      : "pending";
+    const isSpend = type === "expense" || type === "card_purchase";
+    const classification = !isSpend
+      ? "ignored"
+      : ["daily_spend", "already_budgeted", "ignored"].includes(remembered)
+        ? remembered
+        : "pending";
 
     const transaction = {
     id: crypto.randomUUID(),
