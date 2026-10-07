@@ -6,7 +6,7 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-function MonthTabs({ handleBack, selectedYear }) {
+function MonthTabs({ handleBack, selectedYear, onOpenDailySpend }) {
   const now = new Date();
   const budgetPeriod = getBudgetPeriod(now);
   const defaultMonthIndex = selectedYear === budgetPeriod.year ? budgetPeriod.monthIndex : 0;
@@ -319,10 +319,17 @@ function MonthTabs({ handleBack, selectedYear }) {
   return (
     <div className="max-w-4xl mx-auto p-8 bg-white rounded-3xl shadow-xl ring-2 ring-gray-200 dark:ring-gray-700 dark:bg-gray-900">
       {/* Header / Year */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h2 className="text-2xl font-extrabold text-indigo-700 dark:text-indigo-300">
           Year: {selectedYear}
         </h2>
+        <button
+          type="button"
+          onClick={onOpenDailySpend}
+          className="px-5 py-3 rounded-xl bg-indigo-600 text-white font-extrabold shadow hover:bg-indigo-700"
+        >
+          Daily Spend & Year End
+        </button>
       </div>
 
       {/* Month Navigation Tabs */}
