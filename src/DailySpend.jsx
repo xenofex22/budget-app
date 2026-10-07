@@ -20,24 +20,46 @@ function daysBetweenInclusive(start, end) {
   return Math.max(0, Math.floor((e - s) / DAY_MS) + 1);
 }
 
-function getActiveAllowance() {
-  const period = getBudgetPeriod();
+function getDecemberForecastAllowance(now = new Date()) {
+  const period = getBudgetPeriod(now);
+  const calendarYear = now.getFullYear();
+
+  // Until 26 December, use the same active salary-cycle month as Monthly Budget.
+  // From 27 December onward getBudgetPeriod rolls to January, but the year-end
+  // card must still refer to the current calendar year's December position.
+  const selectedYear = Math.min(period.year, calendarYear);
+  const selectedMonthIndex = period.year > calendarYear ? 11 : period.monthIndex;
+  const selectedMonth = period.year > calendarYear ? "December" : period.month;
+
   let monthly = {};
   try {
-    monthly = JSON.parse(localStorage.getItem(`monthlyData_${period.year}`) || "{}");
+    monthly = JSON.parse(localStorage.getItem(`monthlyData_${selectedYear}`) || "{}");
   } catch {
     monthly = {};
   }
 
-  const month = monthly?.[period.month] || {};
-  const expected = (month.expenses || []).reduce(
+  const activeMonth = monthly?.[selectedMonth] || {};
+  const activeExpected = (activeMonth.expenses || []).reduce(
     (sum, item) => sum + Number(item.expected || 0),
     0
   );
-  const remaining = Number(month.current || 0) - expected;
 
-  const now = new Date();
-  const target = new Date(period.year, period.monthIndex, 27);
+  // This mirrors MonthTabs.forecastNextMonthDailySpend("December"):
+  // start from the active month's remaining balance, then carry every future
+  // month's forecast income/expense through December.
+  let forecastBalance = Number(activeMonth.current || 0) - activeExpected;
+
+  for (let i = selectedMonthIndex + 1; i <= 11; i += 1) {
+    const monthName = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
+    ][i];
+    forecastBalance +=
+      Number(monthly?.[monthName]?.income || 0) -
+      Number(monthly?.[monthName]?.expense || 0);
+  }
+
+  const target = new Date(calendarYear, 11, 27);
   const daysLeft = Math.max(
     1,
     Math.ceil(
@@ -47,7 +69,7 @@ function getActiveAllowance() {
     )
   );
 
-  return remaining / daysLeft;
+  return forecastBalance / daysLeft;
 }
 
 function DailySpend({ onBack }) {
@@ -73,7 +95,7 @@ function DailySpend({ onBack }) {
 
   const currency = general.currency || "AED";
   const startingEstimate = Number(general.dailySpendTarget ?? 450);
-  const dailyAllowance = getActiveAllowance();
+  const dailyAllowance = getDecemberForecastAllowance();
 
   async function load() {
     setLoading(true);
@@ -251,7 +273,7 @@ function DailySpend({ onBack }) {
             {formatMoney(projectedAdditionalSaving, currency)}
           </div>
           <div className="mt-4 text-sm font-semibold text-white/90">
-            {formatMoney(dailyAllowance, currency)} daily allowance
+            {formatMoney(dailyAllowance, currency)} December daily allowance
             {" · "}
             {formatMoney(forecastAverage, currency)} forecast daily spend
             {" · "}
