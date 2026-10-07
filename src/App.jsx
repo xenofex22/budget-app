@@ -4,6 +4,7 @@ import GeneralFeatures from "./GeneralFeatures";
 import MonthTabs from "./MonthTabs";
 import LoginScreen from "./LoginScreen";
 import CardManager from "./CardManager";
+import DailySpend from "./DailySpend";
 import { getBudgetPeriod } from "./budgetPeriod";
 import {
   applyBudgetSnapshot,
@@ -111,7 +112,14 @@ function BudgetApp() {
             key={monthTabsKey}
             selectedYear={selectedYear}
             handleBack={handleBackToGeneral}
+            onOpenDailySpend={() => setCurrentView("daily")}
           />
+        </div>
+      )}
+
+      {currentView === "daily" && (
+        <div className="w-full">
+          <DailySpend onBack={() => setCurrentView("months")} />
         </div>
       )}
 
