@@ -138,7 +138,6 @@ module.exports = async function handler(req, res) {
   };
 
     await command("LPUSH", transactionsKey(username), JSON.stringify(transaction));
-    await command("LTRIM", transactionsKey(username), "0", "999");
 
     const settingsKey = dailySpendSettingsKey(username);
     const settings = (await getJson(settingsKey, {})) || {};
