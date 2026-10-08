@@ -97,8 +97,8 @@ function DailySpend({ onBack }) {
   const startingEstimate = Number(general.dailySpendTarget ?? 450);
   const dailyAllowance = getDecemberForecastAllowance();
 
-  async function load() {
-    setLoading(true);
+  async function load({ silent = false } = {}) {
+    if (!silent) setLoading(true);
     setError("");
     try {
       const response = await fetch("/api/daily-spend", {
@@ -112,7 +112,7 @@ function DailySpend({ onBack }) {
     } catch (err) {
       setError(err.message || "Could not load Daily Spend");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -121,10 +121,10 @@ function DailySpend({ onBack }) {
 
     async function refresh() {
       if (disposed) return;
-      await load();
+      await load({ silent: true });
     }
 
-    void refresh();
+    void load();
     const timer = setInterval(refresh, 3000);
 
     return () => {
@@ -190,6 +190,26 @@ function DailySpend({ onBack }) {
       await load();
     } catch (err) {
       setError(err.message || "Could not remove merchant rule");
+    }
+  }
+
+  async function deleteTransaction(transaction) {
+    if (!window.confirm(`Delete this transaction?\n\n${transaction.merchant || "Unknown merchant"} · ${formatMoney(transaction.amount, transaction.currency || currency)}`)) {
+      return;
+    }
+
+    setError("");
+    try {
+      const response = await fetch("/api/daily-spend", {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: transaction.id }),
+      });
+      if (!response.ok) throw new Error("Could not delete transaction");
+      await load({ silent: true });
+    } catch (err) {
+      setError(err.message || "Could not delete transaction");
     }
   }
 
@@ -440,6 +460,13 @@ function DailySpend({ onBack }) {
                         className="px-3 py-2 rounded-xl bg-gray-600 text-white font-bold"
                       >
                         Ignore
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteTransaction(item)}
+                        className="px-3 py-2 rounded-xl bg-red-50 text-red-700 font-bold ring-1 ring-red-200"
+                      >
+                        Delete
                       </button>
                     </div>
                   </div>

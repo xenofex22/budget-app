@@ -187,8 +187,19 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === "DELETE") {
+      const id = cleanText(req.body?.id, 80);
+      if (id) {
+        const transactions = await loadTransactions(username);
+        const next = transactions.filter((item) => item.id !== id);
+        if (next.length === transactions.length) {
+          return res.status(404).json({ error: "Transaction not found" });
+        }
+        await saveTransactions(username, next);
+        return res.status(200).json({ ok: true, deleted: id });
+      }
+
       const merchant = merchantKey(req.body?.merchant);
-      if (!merchant) return res.status(400).json({ error: "Merchant is required" });
+      if (!merchant) return res.status(400).json({ error: "Merchant or transaction id is required" });
 
       const rules = (await getJson(merchantRulesKey(username), {})) || {};
       delete rules[merchant];
