@@ -41,7 +41,7 @@ function parseTransactions(rows) {
 }
 
 async function loadTransactions(username) {
-  const rows = await command("LRANGE", transactionsKey(username), "0", "999");
+  const rows = await command("LRANGE", transactionsKey(username), "0", "-1");
   return parseTransactions(rows);
 }
 
@@ -50,7 +50,6 @@ async function saveTransactions(username, transactions) {
   await command("DEL", key);
   if (transactions.length) {
     await command("RPUSH", key, ...transactions.map((item) => JSON.stringify(item)));
-    await command("LTRIM", key, "0", "999");
   }
 }
 
@@ -128,7 +127,6 @@ module.exports = async function handler(req, res) {
       };
 
       await command("LPUSH", transactionsKey(username), JSON.stringify(transaction));
-      await command("LTRIM", transactionsKey(username), "0", "999");
       await ensureTrackingStart(username, occurredAt);
 
       return res.status(201).json({ ok: true, transaction });
@@ -187,6 +185,24 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === "DELETE") {
+      const ids = Array.isArray(req.body?.ids)
+        ? req.body.ids.map((value) => cleanText(value, 80)).filter(Boolean)
+        : [];
+
+      if (ids.length) {
+        const idSet = new Set(ids);
+        const transactions = await loadTransactions(username);
+        const next = transactions.filter((item) => !idSet.has(item.id));
+        const deletedCount = transactions.length - next.length;
+
+        if (!deletedCount) {
+          return res.status(404).json({ error: "No matching transactions found" });
+        }
+
+        await saveTransactions(username, next);
+        return res.status(200).json({ ok: true, deletedCount });
+      }
+
       const id = cleanText(req.body?.id, 80);
       if (id) {
         const transactions = await loadTransactions(username);
@@ -199,7 +215,7 @@ module.exports = async function handler(req, res) {
       }
 
       const merchant = merchantKey(req.body?.merchant);
-      if (!merchant) return res.status(400).json({ error: "Merchant or transaction id is required" });
+      if (!merchant) return res.status(400).json({ error: "Merchant, transaction id, or ids are required" });
 
       const rules = (await getJson(merchantRulesKey(username), {})) || {};
       delete rules[merchant];
