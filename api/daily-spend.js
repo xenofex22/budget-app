@@ -65,6 +65,26 @@ async function ensureTrackingStart(username, fallbackDate = new Date()) {
   return next;
 }
 
+async function syncTrackingStartToRetainedTransactions(username, transactions) {
+  const key = dailySpendSettingsKey(username);
+  const current = (await getJson(key, {})) || {};
+  const validDates = transactions
+    .map((item) => new Date(item.occurredAt))
+    .filter((date) => !Number.isNaN(date.getTime()))
+    .sort((a, b) => a - b);
+
+  if (validDates.length) {
+    await setJson(key, {
+      ...current,
+      trackingStartedAt: validDates[0].toISOString(),
+    });
+  } else {
+    const next = { ...current };
+    delete next.trackingStartedAt;
+    await setJson(key, next);
+  }
+}
+
 module.exports = async function handler(req, res) {
   const username = requireSession(req, res);
   if (!username) return;
@@ -200,6 +220,7 @@ module.exports = async function handler(req, res) {
         }
 
         await saveTransactions(username, next);
+        await syncTrackingStartToRetainedTransactions(username, next);
         return res.status(200).json({ ok: true, deletedCount });
       }
 
