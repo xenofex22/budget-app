@@ -20,6 +20,81 @@ function daysBetweenInclusive(start, end) {
   return Math.max(0, Math.floor((e - s) / DAY_MS) + 1);
 }
 
+function cycleForDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  let year = date.getFullYear();
+  let monthIndex = date.getMonth();
+
+  if (date.getDate() >= 28) {
+    monthIndex += 1;
+    if (monthIndex === 12) {
+      monthIndex = 0;
+      year += 1;
+    }
+  }
+
+  const end = new Date(year, monthIndex, 27);
+  const start = new Date(year, monthIndex - 1, 28);
+
+  return {
+    key: `${year}-${String(monthIndex + 1).padStart(2, "0")}`,
+    label: `${end.toLocaleString(undefined, { month: "long" })} ${year}`,
+    start,
+    end,
+  };
+}
+
+function csvCell(value) {
+  const text = String(value ?? "");
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function downloadCycleCsv(cycle, items) {
+  const header = [
+    "Occurred At",
+    "Merchant",
+    "Amount",
+    "Currency",
+    "Classification",
+    "Type",
+    "Account",
+    "Card Last 4",
+    "Source",
+    "Received At",
+    "Classified By",
+  ];
+
+  const rows = items.map((item) => [
+    item.occurredAt,
+    item.merchant,
+    item.amount,
+    item.currency,
+    item.classification || "pending",
+    item.type,
+    item.account,
+    item.cardLast4,
+    item.source,
+    item.receivedAt,
+    item.classifiedBy,
+  ]);
+
+  const csv = [header, ...rows]
+    .map((row) => row.map(csvCell).join(","))
+    .join("\r\n");
+
+  const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `smart-budget-${cycle.key}-28-to-27.csv`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 function getDecemberForecastAllowance(now = new Date()) {
   const period = getBudgetPeriod(now);
   const calendarYear = now.getFullYear();
@@ -85,6 +160,13 @@ function DailySpend({ onBack }) {
   const [occurredAt, setOccurredAt] = useState(
     new Date().toISOString().slice(0, 10)
   );
+  const [downloadedCycles, setDownloadedCycles] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("dailySpendDownloadedCycles") || "{}");
+    } catch {
+      return {};
+    }
+  });
 
   let general = {};
   try {
@@ -210,6 +292,58 @@ function DailySpend({ onBack }) {
       await load({ silent: true });
     } catch (err) {
       setError(err.message || "Could not delete transaction");
+    }
+  }
+
+  const completedCycles = useMemo(() => {
+    const grouped = new Map();
+    const today = dateOnly(new Date());
+
+    transactions.forEach((item) => {
+      const cycle = cycleForDate(item.occurredAt);
+      if (!cycle || cycle.end >= today) return;
+
+      if (!grouped.has(cycle.key)) {
+        grouped.set(cycle.key, { ...cycle, transactions: [] });
+      }
+      grouped.get(cycle.key).transactions.push(item);
+    });
+
+    return Array.from(grouped.values()).sort((a, b) => b.end - a.end);
+  }, [transactions]);
+
+  function markCycleDownloaded(cycle) {
+    downloadCycleCsv(cycle, cycle.transactions);
+    const next = { ...downloadedCycles, [cycle.key]: true };
+    setDownloadedCycles(next);
+    localStorage.setItem("dailySpendDownloadedCycles", JSON.stringify(next));
+  }
+
+  async function deleteCycle(cycle) {
+    if (!downloadedCycles[cycle.key]) return;
+
+    const confirmed = window.confirm(
+      `Delete all ${cycle.transactions.length} transactions from ${cycle.start.toLocaleDateString()} to ${cycle.end.toLocaleDateString()}?\n\nThis does not delete remembered merchant rules.`
+    );
+    if (!confirmed) return;
+
+    setError("");
+    try {
+      const response = await fetch("/api/daily-spend", {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: cycle.transactions.map((item) => item.id) }),
+      });
+      if (!response.ok) throw new Error("Could not delete archived cycle");
+
+      const next = { ...downloadedCycles };
+      delete next[cycle.key];
+      setDownloadedCycles(next);
+      localStorage.setItem("dailySpendDownloadedCycles", JSON.stringify(next));
+      await load({ silent: true });
+    } catch (err) {
+      setError(err.message || "Could not delete archived cycle");
     }
   }
 
@@ -473,6 +607,65 @@ function DailySpend({ onBack }) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-6 rounded-3xl bg-white dark:bg-gray-800 p-5 shadow">
+        <h3 className="text-lg font-extrabold text-gray-800 dark:text-white">
+          Completed Budget Cycles
+        </h3>
+        <p className="text-sm font-semibold text-gray-500 mt-1 mb-4">
+          Each cycle runs from the 28th of the previous month through the 27th. Download first, then deletion becomes available.
+        </p>
+
+        {completedCycles.length === 0 ? (
+          <div className="text-sm font-semibold text-gray-500">
+            No completed cycles are ready to archive yet.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {completedCycles.map((cycle) => {
+              const downloaded = Boolean(downloadedCycles[cycle.key]);
+              return (
+                <div
+                  key={cycle.key}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-indigo-50 dark:bg-gray-700 p-4"
+                >
+                  <div>
+                    <div className="font-extrabold text-indigo-900 dark:text-indigo-200">
+                      {cycle.label}
+                    </div>
+                    <div className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                      {cycle.start.toLocaleDateString()} → {cycle.end.toLocaleDateString()} · {cycle.transactions.length} transaction{cycle.transactions.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => markCycleDownloaded(cycle)}
+                      className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold"
+                    >
+                      Download CSV
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!downloaded}
+                      onClick={() => deleteCycle(cycle)}
+                      className={`px-4 py-2 rounded-xl font-bold ${
+                        downloaded
+                          ? "bg-red-600 text-white"
+                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      }`}
+                      title={downloaded ? "Delete archived transactions" : "Download the CSV first"}
+                    >
+                      Delete Cycle
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
