@@ -53,7 +53,7 @@ function parseRawSpendMessage(value) {
   const merchantPatterns = [
     // Emirates Islamic / EI+ structured SMS:
     // "Credit Card Purchase / Card Ending: 3743 / At: SPINNEYS MEYDAN, DUBAI / Amount: AED 6.50 / ..."
-    /\bAt\s*:\s*(.+?)(?=\s*\/\s*(?:Amount|Date|Available\s+Limit)\s*:|$)/i,
+    /\bAt\s*:\s*(.+?)(?=\s*(?:\/\s*)?(?:Amount|Date|Available\s+Limit)\s*:|$)/i,
 
     // Generic purchase wording, including "at:", "@", or "to".
     /\b(?:spent|purchase(?:d)?|transaction|paid|payment|used)\b[\s\S]{0,140}?\b(?:at|@|to)\s*:?\s+(.+?)(?=\s+(?:on|using|with|via|card|ending|ref(?:erence)?|available|balance)\b|\s*\/\s*(?:amount|date|available\s+limit)\s*:|[.;]|$)/i,
