@@ -48,7 +48,7 @@ function resolveActiveYear(configuredYear) {
   return year === now.getFullYear() ? period.year : year;
 }
 
-function BudgetApp() {
+function BudgetApp({ accountProfile }) {
   const initialPeriod = getBudgetPeriod();
   const [generalData, setGeneralData] = useState(null);
   const [isEditing, setIsEditing] = useState(true);
@@ -136,7 +136,11 @@ function BudgetApp() {
   return (
     <div className="min-h-screen bg-gradient-to-tr from-indigo-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-8 transition-colors duration-500">
       {currentView === "general" && (
-        <GeneralFeatures onSubmit={handleGeneralSubmit} savedData={generalData} />
+        <GeneralFeatures
+          onSubmit={handleGeneralSubmit}
+          savedData={generalData}
+          defaultCurrency={accountProfile?.defaultCurrency || "AED"}
+        />
       )}
 
       {currentView === "months" && (
@@ -184,14 +188,27 @@ function BudgetApp() {
 function App() {
   const [authState, setAuthState] = useState("checking");
   const [username, setUsername] = useState("");
+  const [accountProfile, setAccountProfile] = useState(null);
   const [appKey, setAppKey] = useState(0);
   const [syncState, setSyncState] = useState("Cloud ready");
   const lastSnapshot = useRef("");
   const lastCloudUpdatedAt = useRef("");
   const syncInFlight = useRef(false);
 
-  async function hydrateAccount(name) {
+  async function hydrateAccount(name, profile = {}) {
     setSyncState("Loading cloud data...");
+
+    const cachedAccount = localStorage.getItem("budgetActiveAccount");
+    const isPrimary = Boolean(profile?.isPrimary);
+
+    // Legacy browser data may predate account tagging. Only the primary
+    // account is allowed to adopt that old cache. Secondary accounts always
+    // start from their own cloud namespace.
+    if ((cachedAccount && cachedAccount !== name) || (!cachedAccount && !isPrimary)) {
+      clearBudgetCache();
+    }
+    localStorage.setItem("budgetActiveAccount", name);
+
     const localBefore = collectBudgetSnapshot();
     const cloud = await fetchCloudBudget();
 
@@ -208,6 +225,7 @@ function App() {
 
     lastSnapshot.current = JSON.stringify(collectBudgetSnapshot());
     setUsername(name);
+    setAccountProfile(profile);
     setAppKey((value) => value + 1);
     setAuthState("authenticated");
     setSyncState("Cloud synced");
@@ -220,7 +238,7 @@ function App() {
         if (!response.ok) throw new Error("not signed in");
         return response.json();
       })
-      .then((data) => active && hydrateAccount(data.username))
+      .then((data) => active && hydrateAccount(data.username, data))
       .catch(() => active && setAuthState("anonymous"));
     return () => { active = false; };
   }, []);
@@ -329,6 +347,8 @@ function App() {
     lastSnapshot.current = "";
     lastCloudUpdatedAt.current = "";
     setUsername("");
+    setAccountProfile(null);
+    localStorage.removeItem("budgetActiveAccount");
     setAuthState("anonymous");
   }
 
@@ -360,7 +380,7 @@ function App() {
           </div>
         </div>
       </header>
-      <BudgetApp key={appKey} />
+      <BudgetApp key={appKey} accountProfile={accountProfile} />
     </div>
   );
 }

@@ -43,12 +43,12 @@ function formatMoney(value, currency) {
   })}`;
 }
 
-function GeneralFeatures({ onSubmit, savedData }) {
+function GeneralFeatures({ onSubmit, savedData, defaultCurrency = "AED" }) {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(savedData?.year || currentYear);
   const [primarySalary, setPrimarySalary] = useState(savedData?.primarySalary || "");
   const [familySalary, setFamilySalary] = useState(savedData?.familySalary || "");
-  const [currency, setCurrency] = useState(savedData?.currency || "AED");
+  const [currency, setCurrency] = useState(savedData?.currency || defaultCurrency);
   const [dailySpendTarget, setDailySpendTarget] = useState(savedData?.dailySpendTarget ?? 450);
   const [expenses, setExpenses] = useState(
     savedData?.expenses || Array.from({ length: 3 }, () => ({ name: "", actual: "" }))

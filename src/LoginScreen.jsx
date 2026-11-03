@@ -22,7 +22,7 @@ export default function LoginScreen({ onLogin }) {
 
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || "Login failed");
-      await onLogin(payload.username);
+      await onLogin(payload.username, payload);
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {
