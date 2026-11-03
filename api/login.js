@@ -1,4 +1,4 @@
-const { authConfigured, setSessionCookie, validateCredentials } = require("../lib/server/auth");
+const { authConfigured, getAccountProfile, setSessionCookie, validateCredentials } = require("../lib/server/auth");
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
@@ -16,5 +16,5 @@ module.exports = async function handler(req, res) {
   }
 
   setSessionCookie(res, username, Boolean(remember));
-  return res.status(200).json({ ok: true, username });
+  return res.status(200).json({ ok: true, ...getAccountProfile(username) });
 };
