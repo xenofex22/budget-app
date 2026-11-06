@@ -15,6 +15,8 @@ Daily Spend → Dashboard shows display-only expense estimates, category and dai
 
 The mapper preserves the agreed Noon/Amazon grocery default up to AED 400, ANE Meydan alcohol mapping, weekday lunchtime estimates, and confidence reasons. Manual-entry timestamps do not trigger lunchtime inference. Run `npm test` for mapping, date, filtering, and reconciliation checks; `npm run build` builds the application.
 
+Confirm or change categories in the dashboard's transaction review area. Reviews are saved by transaction ID in a separate per-account Redis hash through the authenticated `/api/spend-reviews` endpoint. They do not rewrite transactions or remembered merchant rules; Reset estimate removes a saved choice. The daily chart's dashed line shows the selected period's average across tracked days, including zero-spend days.
+
 ## Account + cloud setup on Vercel
 
 Create an Upstash Redis database (the free tier is sufficient for normal personal use), then add the following Environment Variables to the Vercel project:
