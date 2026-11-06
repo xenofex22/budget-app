@@ -12,7 +12,7 @@ const money = (value, currency) => `${currency} ${value.toLocaleString('en-GB', 
 const shortDate = date => new Date(`${date}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 const PAGE_SIZE = 25;
 
-export default function SpendDashboard({ transactions, loading, currency: preferredCurrency = 'AED' }) {
+export default function SpendDashboard({ transactions, loading, currency: preferredCurrency = 'AED', trackingStartedAt }) {
   const mapped = useMemo(() => transactions.map(mapDailyExpense).filter(Boolean), [transactions]);
   const today = dubaiDateTime(new Date().toISOString()).date;
   const currentCycle = budgetCycleForDate(today);
@@ -34,7 +34,8 @@ export default function SpendDashboard({ transactions, loading, currency: prefer
   const start = period === 'all' ? '' : period === 'custom' ? startDate : cycle?.start || '';
   const end = period === 'all' ? '' : period === 'custom' ? endDate : cycle?.key === currentCycle.key ? today : cycle?.end || '';
   const invalidRange = period === 'custom' && (!start || !end || start > end);
-  const summary = useMemo(() => aggregateExpenses(mapped, { currency, start, end }), [mapped, currency, start, end]);
+  const trackingStart = dubaiDateTime(trackingStartedAt)?.date || '';
+  const summary = useMemo(() => aggregateExpenses(mapped, { currency, start, end, trackingStart }), [mapped, currency, start, end, trackingStart]);
   const tableRows = summary.rows.filter(row => (!category || row.category === category) && (!reviewOnly || row.needsReview)
     && `${row.merchant} ${row.category} ${row.subcategory}`.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
@@ -74,7 +75,7 @@ export default function SpendDashboard({ transactions, loading, currency: prefer
       <div className="spend-empty"><h4>No daily spend in this period</h4><p>Choose another cycle or All available dates to see your breakdown.</p></div> : <>
       <div className="spend-stats" aria-label="Spending summary">
         <div><span>Total daily spend</span><strong>{money(summary.total, currency)}</strong><small>{summary.rows.length} transactions</small></div>
-        <div><span>Daily average</span><strong>{money(summary.average, currency)}</strong><small>{summary.dayCount} calendar days, including zero-spend days</small></div>
+        <div><span>Daily average</span><strong>{money(summary.average, currency)}</strong><small>{summary.dayCount} tracked days ({shortDate(summary.trackingStart)} – {shortDate(summary.trackingEnd)}), including zero-spend days</small></div>
         <div><span>Low confidence</span><strong>{money(summary.reviewTotal, currency)}</strong><small>{summary.reviewCount} transactions to check</small></div>
       </div>
       <div className="spend-chart-grid">

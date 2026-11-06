@@ -66,3 +66,25 @@ test('invalid values are excluded; legitimate zero is retained; CSV escapes untr
   assert.ok(csv.includes('"\'=SUM(1,2)"""'));
   assert.ok(csv.startsWith('\uFEFF'));
 });
+
+test('partial first cycle averages only tracked days, including zero days after tracking begins', () => {
+  const rows = [item({ amount: 210, occurredAt: '2026-10-07T08:00:00Z' })].map(mapDailyExpense);
+  const period = { start: '2026-09-28', end: '2026-10-27' };
+  for (const options of [period, { ...period, trackingStart: '2026-10-07' }, { ...period, trackingStart: '2026-10-15' }]) {
+    const result = aggregateExpenses(rows, options);
+    assert.equal(result.dayCount, 21);
+    assert.equal(result.average, 10);
+    assert.equal(result.trackingStart, '2026-10-07');
+    assert.equal(result.daily.at(-1).date, '2026-10-27');
+    assert.equal(result.daily.at(-1).total, 0);
+  }
+});
+
+test('explicit tracking start preserves zero days before the first daily purchase and within later cycles', () => {
+  const rows = [item({ amount: 300, occurredAt: '2026-10-20T08:00:00Z' })].map(mapDailyExpense);
+  const result = aggregateExpenses(rows, { start: '2026-09-28', end: '2026-10-27', trackingStart: '2026-09-01' });
+  assert.equal(result.dayCount, 30); assert.equal(result.average, 10);
+  assert.equal(result.daily[0].total, 0);
+  const custom = aggregateExpenses(rows, { start: '2026-10-21', end: '2026-10-23', trackingStart: '2026-10-07' });
+  assert.equal(custom.dayCount, 3); assert.equal(custom.total, 0);
+});
