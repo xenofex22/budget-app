@@ -95,7 +95,7 @@ export function budgetCycleForDate(dateKey) {
     label: end.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }) };
 }
 
-export function aggregateExpenses(items, { currency = 'AED', start = '', end = '' } = {}) {
+export function aggregateExpenses(items, { currency = 'AED', start = '', end = '', trackingStart = '' } = {}) {
   const rows = items.filter(item => item.currency === currency && (!start || item.localDate >= start) && (!end || item.localDate <= end));
   const categories = new Map(), subcategories = new Map(), days = new Map();
   let totalCents = 0, reviewCents = 0;
@@ -109,7 +109,12 @@ export function aggregateExpenses(items, { currency = 'AED', start = '', end = '
     }
     days.set(item.localDate, (days.get(item.localDate) || 0) + cents);
   });
-  const first = start || [...days.keys()].sort()[0], last = end || [...days.keys()].sort().at(-1);
+  // A selected cycle may begin before tracking started. Those earlier days are
+  // missing history, not zero-spend days. Keep genuine zero days after tracking.
+  const earliestRecord = items.map(item => item.localDate).sort()[0];
+  const coverageStart = trackingStart && (!earliestRecord || trackingStart < earliestRecord) ? trackingStart : earliestRecord;
+  const first = coverageStart && (!start || coverageStart > start) ? coverageStart : start;
+  const last = end || [...days.keys()].sort().at(-1);
   const daily = [];
   if (first && last && first <= last) {
     for (let time = Date.parse(`${first}T00:00:00Z`); time <= Date.parse(`${last}T00:00:00Z`); time += DAY_MS) {
@@ -122,7 +127,8 @@ export function aggregateExpenses(items, { currency = 'AED', start = '', end = '
   return { rows, total: totalCents / 100, reviewTotal: reviewCents / 100,
     reviewCount: rows.filter(row => row.needsReview).length, categories: groups(categories),
     subcategories: groups(subcategories).map(g => { const [category, subcategory] = g.name.split('\u0000'); return { ...g, category, subcategory }; }),
-    daily, dayCount: daily.length, average: daily.length ? totalCents / 100 / daily.length : 0 };
+    daily, trackingStart: first || '', trackingEnd: last || '',
+    dayCount: daily.length, average: daily.length ? totalCents / 100 / daily.length : 0 };
 }
 
 function csvCell(value) {

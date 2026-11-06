@@ -536,7 +536,7 @@ function DailySpend({ onBack }) {
         </div>
 
         {tab === "dashboard" ? (
-          <SpendDashboard transactions={transactions} loading={loading} currency={currency} />
+          <SpendDashboard transactions={transactions} loading={loading} currency={currency} trackingStartedAt={settings.trackingStartedAt} />
         ) : loading ? (
           <div className="p-8 text-center font-semibold text-gray-500">Loading…</div>
         ) : filtered.length === 0 ? (
