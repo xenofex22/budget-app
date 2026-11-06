@@ -1,0 +1,53 @@
+.spend-dashboard { padding: 1.25rem; color: #202538; min-width: 0; }
+.spend-dashboard-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.spend-dashboard h3 { font-size: 1.35rem; font-weight: 800; margin: 0 0 .4rem; }
+.spend-dashboard h4 { font-size: 1.05rem; font-weight: 800; margin: 0 0 1rem; }
+.spend-dashboard p { font-size: .85rem; line-height: 1.6; }
+.spend-dashboard button { padding: .6rem .85rem; font-size: .8rem; }
+.spend-dashboard button:disabled { opacity: .45; cursor: not-allowed; }
+.spend-dashboard button:focus-visible, .spend-dashboard summary:focus-visible { outline: 2px solid #4f46b8; outline-offset: 3px; }
+.spend-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .85rem; margin: 1.1rem 0 .55rem; }
+.spend-filters label { display: flex; flex-direction: column; gap: .4rem; font-size: .8rem; font-weight: 700; min-width: 130px; max-width: 100%; }
+.spend-filters input, .spend-filters select { font-size: .85rem; padding: .65rem; min-height: 40px; max-width: 100%; }
+.spend-filters .spend-review-toggle { flex-direction: row; align-items: center; min-height: 40px; }
+.spend-review-toggle input { min-height: auto; }
+.spend-scope, .spend-muted { color: #5c6371; font-size: .78rem; }
+small.spend-muted { display: block; margin-top: .3rem; }
+.spend-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin: 1.25rem 0; }
+.spend-stats > div { background: #f1f2fa; border: 1px solid #daddec; padding: 1rem; }
+.spend-stats span, .spend-stats small { display: block; font-size: .8rem; line-height: 1.5; }
+.spend-stats strong { display: block; font-size: 1.5rem; margin: .5rem 0; color: #34307d; }
+.spend-chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.spend-panel { padding: 1rem; border: 1px solid #dce0e7; background: #fff; min-width: 0; }
+.spend-chart { height: 270px; position: relative; margin-bottom: 1rem; }
+.spend-dashboard .spend-chart canvas { max-width: 100%; max-height: 100%; background: #fff; }
+.spend-table-scroll { overflow-x: auto; max-width: 100%; }
+.spend-dashboard table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.spend-dashboard th { text-align: left; border-bottom: 2px solid #dce0e7; font-weight: 700; padding: .7rem .4rem; }
+.spend-dashboard td { border-bottom: 1px solid #eceef2; padding: .7rem .4rem; vertical-align: top; overflow-wrap: anywhere; }
+.spend-dashboard th:not(:first-child), .spend-dashboard td:not(:first-child) { text-align: right; }
+.spend-dashboard .spend-category-button { display: flex; align-items: center; text-align: left; gap: .5rem; padding: .4rem; font-size: .8rem; }
+.spend-category-button[aria-pressed="true"] { outline: 2px solid #4f46b8; }
+.spend-swatch { width: .7rem; height: .7rem; display: inline-block; flex-shrink: 0; }
+.spend-dashboard summary { cursor: pointer; font-size: .8rem; font-weight: 700; padding: .4rem 0; }
+.spend-dashboard .spend-detail-heading { margin-top: 1.4rem; }
+.spend-transactions { margin-top: 1rem; }
+.spend-transactions table { min-width: 720px; }
+.spend-transactions th, .spend-transactions td { text-align: left !important; }
+.spend-transactions td:nth-child(4), .spend-transactions th:nth-child(4) { text-align: right !important; white-space: nowrap; }
+.spend-transactions td:nth-child(2) { max-width: 230px; }
+.spend-transactions td:last-child { max-width: 220px; }
+.spend-confidence-low { display: inline-block; background: #fff1d9; color: #8a4308; padding: .2rem .4rem; font-weight: 700; }
+.spend-pagination { display: flex; align-items: center; gap: .8rem; justify-content: flex-end; margin-top: 1rem; font-size: .8rem; }
+.spend-method { margin-top: 1.25rem; padding: .8rem; background: #f6f7fb; }
+.spend-notice { color: #8a4308; background: #fff1d9; padding: .8rem; }
+.spend-empty { padding: 2rem 0; text-align: center; }
+.spend-daily-totals { max-height: 240px; }
+@media (max-width: 760px) {
+  .spend-dashboard { padding: .85rem; }
+  .spend-stats, .spend-chart-grid { grid-template-columns: 1fr; }
+  .spend-dashboard-heading { align-items: stretch; }
+  .spend-dashboard-heading > button { width: 100%; }
+  .spend-chart { height: 250px; }
+  .spend-filters > label { flex: 1 1 130px; }
+}

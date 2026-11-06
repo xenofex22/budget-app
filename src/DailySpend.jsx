@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getBudgetPeriod } from "./budgetPeriod";
+import SpendDashboard from "./SpendDashboard";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -399,6 +400,7 @@ function DailySpend({ onBack }) {
   });
 
   const tabs = [
+    ["dashboard", "Dashboard"],
     ["pending", "Pending"],
     ["daily_spend", "Daily Spend"],
     ["already_budgeted", "Already Budgeted"],
@@ -528,12 +530,14 @@ function DailySpend({ onBack }) {
                   : "bg-indigo-50 text-indigo-700"
               }`}
             >
-              {label} ({counts[key]})
+              {label}{key === "dashboard" ? "" : ` (${counts[key]})`}
             </button>
           ))}
         </div>
 
-        {loading ? (
+        {tab === "dashboard" ? (
+          <SpendDashboard transactions={transactions} loading={loading} currency={currency} />
+        ) : loading ? (
           <div className="p-8 text-center font-semibold text-gray-500">Loading…</div>
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center font-semibold text-gray-500">

@@ -9,6 +9,12 @@ npm install
 npm run dev
 ```
 
+## Daily Spend dashboard
+
+Daily Spend → Dashboard shows display-only expense estimates, category and daily charts, subcategory totals, and a filtered CSV download. It includes only `daily_spend` records, separates currencies, and uses Dubai time with 28th–27th budget-cycle filters. Category estimates never update saved classifications, remembered merchant rules, forecasts, or transaction data.
+
+The mapper preserves the agreed Noon/Amazon grocery default up to AED 400, ANE Meydan alcohol mapping, weekday lunchtime estimates, and confidence reasons. Manual-entry timestamps do not trigger lunchtime inference. Run `npm test` for mapping, date, filtering, and reconciliation checks; `npm run build` builds the application.
+
 ## Account + cloud setup on Vercel
 
 Create an Upstash Redis database (the free tier is sufficient for normal personal use), then add the following Environment Variables to the Vercel project:
