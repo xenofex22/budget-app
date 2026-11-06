@@ -61,7 +61,10 @@ export function dubaiDateTime(value) {
     weekday: date.getUTCDay(), hour: date.getUTCHours() + date.getUTCMinutes() / 60 };
 }
 
-export function mapDailyExpense(item) {
+export const EXPENSE_CATEGORIES = [...new Set([...ANALYTICS_RULES.map(rule => rule.category), 'Entertainment', 'Other'])].filter(category => category !== 'Needs review').sort();
+export const EXPENSE_DETAILS = category => [...new Set(ANALYTICS_RULES.filter(rule => rule.category === category).map(rule => rule.subcategory))].sort();
+
+export function mapDailyExpense(item, review) {
   if (item.classification !== 'daily_spend') return null;
   const local = dubaiDateTime(item.occurredAt);
   const amount = Number(item.amount);
@@ -78,10 +81,13 @@ export function mapDailyExpense(item) {
   };
   const match = ANALYTICS_RULES.find(rule => new RegExp(rule.pattern, 'i').test(merchant) && conditions[rule.condition]
     && (!rule.condition.includes('amount') || currency === 'AED'));
+  const confirmed = review && EXPENSE_CATEGORIES.includes(review.category) && typeof review.subcategory === 'string' && review.subcategory.trim();
   return { ...item, amount, currency,
     normalizedMerchant: merchant, localDate: local.date, localTime: local.time,
-    category: match.category, subcategory: match.subcategory, confidence: match.confidence,
-    needsReview: match.confidence === 'Low', mappingReason: match.reason, mappingRule: match.id,
+    category: confirmed ? review.category : match.category, subcategory: confirmed ? review.subcategory.trim() : match.subcategory,
+    confidence: confirmed ? 'Confirmed' : match.confidence, reviewedAt: confirmed ? review.reviewedAt : null,
+    needsReview: confirmed ? false : match.confidence === 'Low',
+    mappingReason: confirmed ? 'You confirmed this category for this transaction.' : match.reason, mappingRule: confirmed ? 'manual_review' : match.id,
     timeBasis: item.source === 'manual-web' ? 'Manual entry; time not used' : 'Dubai time (UTC+4)' };
 }
 

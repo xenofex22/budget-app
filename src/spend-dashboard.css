@@ -43,6 +43,13 @@ small.spend-muted { display: block; margin-top: .3rem; }
 .spend-notice { color: #8a4308; background: #fff1d9; padding: .8rem; }
 .spend-empty { padding: 2rem 0; text-align: center; }
 .spend-daily-totals { max-height: 240px; }
+.spend-review-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+.spend-review-actions button { font-size: .75rem; padding: .4rem .6rem; }
+.spend-review-editor { padding: 1rem; margin: 1rem 0; border: 2px solid #4f46b8; background: #f5f4fc; }
+.spend-review-editor input { min-width: 230px; }
+.spend-review-success { background: #e9f5ec; color: #215a31; padding: .7rem; }
+.spend-transactions { scroll-margin-top: 80px; }
+.spend-chart-key { margin-bottom: .8rem; color: #535b69; }
 @media (max-width: 760px) {
   .spend-dashboard { padding: .85rem; }
   .spend-stats, .spend-chart-grid { grid-template-columns: 1fr; }
