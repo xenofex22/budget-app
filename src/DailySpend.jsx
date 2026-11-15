@@ -21,6 +21,50 @@ function daysBetweenInclusive(start, end) {
   return Math.max(0, Math.floor((e - s) / DAY_MS) + 1);
 }
 
+function normalizeDuplicateMerchant(value) {
+  return String(value || "").trim().toUpperCase().replace(/\s+/g, " ");
+}
+
+function transactionTimestamp(item) {
+  const value = new Date(item.occurredAt || item.receivedAt || 0).getTime();
+  return Number.isFinite(value) ? value : null;
+}
+
+function dedupeShortcutTransactions(items) {
+  const kept = [];
+
+  [...items]
+    .sort((a, b) => (transactionTimestamp(a) || 0) - (transactionTimestamp(b) || 0))
+    .forEach((item) => {
+      if (item.source !== "iphone-shortcut") {
+        kept.push(item);
+        return;
+      }
+
+      const time = transactionTimestamp(item);
+      if (time == null) {
+        kept.push(item);
+        return;
+      }
+
+      const duplicate = kept.some((existing) => {
+        if (existing.source !== "iphone-shortcut") return false;
+        const existingTime = transactionTimestamp(existing);
+        if (existingTime == null || Math.abs(time - existingTime) > 5 * 60 * 1000) return false;
+
+        return (
+          Number(existing.amount || 0) === Number(item.amount || 0) &&
+          String(existing.currency || "AED").toUpperCase() === String(item.currency || "AED").toUpperCase() &&
+          normalizeDuplicateMerchant(existing.merchant) === normalizeDuplicateMerchant(item.merchant)
+        );
+      });
+
+      if (!duplicate) kept.push(item);
+    });
+
+  return kept.sort((a, b) => (transactionTimestamp(b) || 0) - (transactionTimestamp(a) || 0));
+}
+
 function cycleForDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
@@ -353,10 +397,17 @@ function DailySpend({ onBack }) {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const dailyTransactions = useMemo(
-    () => transactions.filter((item) => item.classification === "daily_spend"),
+  const analysisTransactions = useMemo(
+    () => dedupeShortcutTransactions(transactions),
     [transactions]
   );
+
+  const dailyTransactions = useMemo(
+    () => analysisTransactions.filter((item) => item.classification === "daily_spend"),
+    [analysisTransactions]
+  );
+
+  const suppressedDuplicateCount = transactions.length - analysisTransactions.length;
 
   const earliestDailySpendDate = dailyTransactions.reduce((earliest, item) => {
     const when = new Date(item.occurredAt);
@@ -472,6 +523,7 @@ function DailySpend({ onBack }) {
           <div>Completed days used: <strong>{completedDays}</strong></div>
           <div>Calculated actual average: <strong>{formatMoney(actualAverage, currency)}</strong></div>
           <div>Transactions in average window: <strong>{completedWindowTransactions.length}</strong></div>
+          <div>Duplicate Shortcut records ignored in calculations: <strong>{suppressedDuplicateCount}</strong></div>
           <div>Tracking start: <strong>{trackingStart.toLocaleDateString()}</strong></div>
           <div>Average through: <strong>{yesterday.toLocaleDateString()}</strong></div>
         </div>
@@ -595,7 +647,7 @@ function DailySpend({ onBack }) {
         </div>
 
         {tab === "dashboard" ? (
-          <SpendDashboard transactions={transactions} loading={loading} currency={currency} trackingStartedAt={settings.trackingStartedAt} />
+          <SpendDashboard transactions={analysisTransactions} loading={loading} currency={currency} trackingStartedAt={settings.trackingStartedAt} />
         ) : loading ? (
           <div className="p-8 text-center font-semibold text-gray-500">Loading…</div>
         ) : filtered.length === 0 ? (
