@@ -390,6 +390,9 @@ function DailySpend({ onBack }) {
 
   const actualAverage = completedDays > 0 ? completedSpend / completedDays : 0;
   const forecastAverage = completedDays >= 7 ? actualAverage : startingEstimate;
+  const targetSizedDailySpend = dailyTransactions.filter(
+    (item) => Number(item.amount || 0) === startingEstimate
+  );
   const yearEnd = new Date(now.getFullYear(), 11, 27);
   const daysRemaining = daysBetweenInclusive(today, yearEnd);
   const projectedAdditionalSaving =
@@ -447,6 +450,37 @@ function DailySpend({ onBack }) {
           {error}
         </div>
       )}
+
+      <details className="mb-6 rounded-2xl bg-white dark:bg-gray-800 p-4 shadow">
+        <summary className="cursor-pointer font-extrabold text-indigo-700 dark:text-indigo-300">
+          Calculation details
+        </summary>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm font-semibold text-gray-700 dark:text-gray-200">
+          <div>Completed Daily Spend total: <strong>{formatMoney(completedSpend, currency)}</strong></div>
+          <div>Completed tracked days: <strong>{completedDays}</strong></div>
+          <div>Actual daily average: <strong>{formatMoney(actualAverage, currency)}</strong></div>
+          <div>Configured fallback target: <strong>{formatMoney(startingEstimate, currency)}</strong></div>
+          <div>Effective tracking start: <strong>{trackingStart.toLocaleDateString()}</strong></div>
+          <div>Earliest real Daily Spend: <strong>{earliestDailySpendDate ? earliestDailySpendDate.toLocaleDateString() : "None"}</strong></div>
+          <div>Stored tracking start: <strong>{configuredTrackingStart && !Number.isNaN(configuredTrackingStart.getTime()) ? configuredTrackingStart.toLocaleDateString() : "None"}</strong></div>
+          <div>Transactions equal to fallback target: <strong>{targetSizedDailySpend.length}</strong></div>
+        </div>
+        {targetSizedDailySpend.length > 0 && (
+          <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+            <div className="font-extrabold mb-2">
+              Daily Spend transaction(s) exactly equal to {formatMoney(startingEstimate, currency)}
+            </div>
+            {targetSizedDailySpend.slice(0, 5).map((item) => (
+              <div key={item.id}>
+                {new Date(item.occurredAt).toLocaleString()} · {item.merchant || "Unknown merchant"} · {formatMoney(item.amount, item.currency || currency)}
+              </div>
+            ))}
+          </div>
+        )}
+        <p className="mt-3 text-xs text-gray-500">
+          The configured fallback target should never be added to actual spend. It is only used for the forecast until enough completed tracking days exist.
+        </p>
+      </details>
 
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="md:col-span-2 rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 shadow-xl">
