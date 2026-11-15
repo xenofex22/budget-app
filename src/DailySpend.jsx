@@ -394,6 +394,17 @@ function DailySpend({ onBack }) {
 
   const actualAverage = completedDays > 0 ? completedSpend / completedDays : 0;
   const forecastAverage = completedDays >= 7 ? actualAverage : startingEstimate;
+
+  const completedWindowTransactions = dailyTransactions
+    .filter((item) => {
+      const when = new Date(item.occurredAt);
+      if (Number.isNaN(when.getTime())) return false;
+      const day = dateOnly(when);
+      return day >= trackingStart && day <= yesterday;
+    })
+    .sort((a, b) => Number(b.amount || 0) - Number(a.amount || 0));
+
+  const largestCompletedTransactions = completedWindowTransactions.slice(0, 10);
   const yearEnd = new Date(now.getFullYear(), 11, 27);
   const daysRemaining = daysBetweenInclusive(today, yearEnd);
   const projectedAdditionalSaving =
@@ -451,6 +462,35 @@ function DailySpend({ onBack }) {
           {error}
         </div>
       )}
+
+      <details className="mb-6 rounded-2xl bg-white dark:bg-gray-800 p-4 shadow">
+        <summary className="cursor-pointer font-extrabold text-indigo-700 dark:text-indigo-300">
+          Calculation details
+        </summary>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm font-semibold text-gray-700 dark:text-gray-200">
+          <div>Completed spend used: <strong>{formatMoney(completedSpend, currency)}</strong></div>
+          <div>Completed days used: <strong>{completedDays}</strong></div>
+          <div>Calculated actual average: <strong>{formatMoney(actualAverage, currency)}</strong></div>
+          <div>Transactions in average window: <strong>{completedWindowTransactions.length}</strong></div>
+          <div>Tracking start: <strong>{trackingStart.toLocaleDateString()}</strong></div>
+          <div>Average through: <strong>{yesterday.toLocaleDateString()}</strong></div>
+        </div>
+
+        {largestCompletedTransactions.length > 0 && (
+          <div className="mt-4">
+            <div className="font-extrabold text-gray-800 dark:text-gray-100 mb-2">
+              10 largest Daily Spend transactions in this average
+            </div>
+            <div className="space-y-1 text-sm">
+              {largestCompletedTransactions.map((item) => (
+                <div key={item.id} className="rounded-lg bg-amber-50 dark:bg-gray-700 px-3 py-2">
+                  {new Date(item.occurredAt).toLocaleString()} · {item.merchant || "Unknown merchant"} · <strong>{formatMoney(item.amount, item.currency || currency)}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </details>
 
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="md:col-span-2 rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 shadow-xl">
