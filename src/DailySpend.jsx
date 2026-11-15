@@ -30,17 +30,18 @@ function transactionTimestamp(item) {
   return Number.isFinite(value) ? value : null;
 }
 
+function isLegitimateCloseParkingRepeat(item) {
+  const merchant = normalizeDuplicateMerchant(item.merchant);
+  return Number(item.amount || 0) === 20 &&
+    /(PARK|PARKONIC|VALET|DIGITAL DUBAI)/.test(merchant);
+}
+
 function dedupeShortcutTransactions(items) {
   const kept = [];
 
   [...items]
     .sort((a, b) => (transactionTimestamp(a) || 0) - (transactionTimestamp(b) || 0))
     .forEach((item) => {
-      if (item.source !== "iphone-shortcut") {
-        kept.push(item);
-        return;
-      }
-
       const time = transactionTimestamp(item);
       if (time == null) {
         kept.push(item);
@@ -48,15 +49,41 @@ function dedupeShortcutTransactions(items) {
       }
 
       const duplicate = kept.some((existing) => {
-        if (existing.source !== "iphone-shortcut") return false;
         const existingTime = transactionTimestamp(existing);
-        if (existingTime == null || Math.abs(time - existingTime) > 5 * 60 * 1000) return false;
+        if (existingTime == null) return false;
 
-        return (
+        if (
+          item.eventFingerprint &&
+          existing.eventFingerprint &&
+          item.eventFingerprint === existing.eventFingerprint
+        ) {
+          return true;
+        }
+
+        const sameCore =
           Number(existing.amount || 0) === Number(item.amount || 0) &&
           String(existing.currency || "AED").toUpperCase() === String(item.currency || "AED").toUpperCase() &&
-          normalizeDuplicateMerchant(existing.merchant) === normalizeDuplicateMerchant(item.merchant)
-        );
+          normalizeDuplicateMerchant(existing.merchant) === normalizeDuplicateMerchant(item.merchant);
+
+        if (!sameCore) return false;
+
+        if (isLegitimateCloseParkingRepeat(item) && isLegitimateCloseParkingRepeat(existing)) {
+          return false;
+        }
+
+        if (item.source === "iphone-shortcut" && existing.source === "iphone-shortcut") {
+          return Math.abs(time - existingTime) <= 5 * 60 * 1000;
+        }
+
+        const sameOccurredAt = String(existing.occurredAt || "") === String(item.occurredAt || "");
+        const existingReceived = new Date(existing.receivedAt || 0).getTime();
+        const itemReceived = new Date(item.receivedAt || 0).getTime();
+        const receivedClose =
+          Number.isFinite(existingReceived) &&
+          Number.isFinite(itemReceived) &&
+          Math.abs(existingReceived - itemReceived) <= 2 * 60 * 1000;
+
+        return sameOccurredAt && receivedClose;
       });
 
       if (!duplicate) kept.push(item);
@@ -361,7 +388,7 @@ function DailySpend({ onBack }) {
     const grouped = new Map();
     const today = dateOnly(new Date());
 
-    transactions.forEach((item) => {
+    analysisTransactions.forEach((item) => {
       const cycle = cycleForDate(item.occurredAt);
       if (!cycle || cycle.end >= today) return;
 
@@ -372,7 +399,7 @@ function DailySpend({ onBack }) {
     });
 
     return Array.from(grouped.values()).sort((a, b) => b.end - a.end);
-  }, [transactions]);
+  }, [analysisTransactions]);
 
   function markCycleDownloaded(cycle) {
     downloadCycleCsv(cycle, cycle.transactions);
@@ -486,13 +513,13 @@ function DailySpend({ onBack }) {
   }, 0);
 
   const counts = {
-    pending: transactions.filter((item) => !item.classification || item.classification === "pending").length,
-    daily_spend: transactions.filter((item) => item.classification === "daily_spend").length,
-    already_budgeted: transactions.filter((item) => item.classification === "already_budgeted").length,
-    ignored: transactions.filter((item) => item.classification === "ignored").length,
+    pending: analysisTransactions.filter((item) => !item.classification || item.classification === "pending").length,
+    daily_spend: analysisTransactions.filter((item) => item.classification === "daily_spend").length,
+    already_budgeted: analysisTransactions.filter((item) => item.classification === "already_budgeted").length,
+    ignored: analysisTransactions.filter((item) => item.classification === "ignored").length,
   };
 
-  const filtered = transactions.filter((item) => {
+  const filtered = analysisTransactions.filter((item) => {
     const c = item.classification || "pending";
     return c === tab;
   });
