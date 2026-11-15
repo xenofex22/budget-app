@@ -358,11 +358,26 @@ function DailySpend({ onBack }) {
     [transactions]
   );
 
-  const trackingStart = settings.trackingStartedAt
+  const earliestDailySpendDate = dailyTransactions.reduce((earliest, item) => {
+    const when = new Date(item.occurredAt);
+    if (Number.isNaN(when.getTime())) return earliest;
+    const day = dateOnly(when);
+    return !earliest || day < earliest ? day : earliest;
+  }, null);
+
+  const configuredTrackingStart = settings.trackingStartedAt
     ? dateOnly(new Date(settings.trackingStartedAt))
-    : dailyTransactions.length
-      ? dateOnly(new Date(dailyTransactions[dailyTransactions.length - 1].occurredAt))
-      : today;
+    : null;
+
+  // Never let a later/corrupted persisted tracking start hide real Daily Spend
+  // history. If tracking began earlier than the first classified purchase we
+  // preserve those genuine zero-spend days; otherwise the earliest real Daily
+  // Spend transaction is the safe lower bound.
+  const trackingStart = configuredTrackingStart && !Number.isNaN(configuredTrackingStart.getTime())
+    ? earliestDailySpendDate && earliestDailySpendDate < configuredTrackingStart
+      ? earliestDailySpendDate
+      : configuredTrackingStart
+    : earliestDailySpendDate || today;
 
   const completedDays = trackingStart <= yesterday
     ? daysBetweenInclusive(trackingStart, yesterday)

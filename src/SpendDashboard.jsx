@@ -23,6 +23,9 @@ export default function SpendDashboard({ transactions, loading, currency: prefer
   const [draftDetail, setDraftDetail] = useState('');
   const [detail, setDetail] = useState('');
   const today = dubaiDateTime(new Date().toISOString()).date;
+  const yesterday = new Date(`${today}T00:00:00Z`);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  const completedThrough = yesterday.toISOString().slice(0, 10);
   const currentCycle = budgetCycleForDate(today);
   const [period, setPeriod] = useState(currentCycle.key);
   const [currency, setCurrency] = useState(preferredCurrency);
@@ -43,7 +46,10 @@ export default function SpendDashboard({ transactions, loading, currency: prefer
   const end = period === 'all' ? '' : period === 'custom' ? endDate : cycle?.key === currentCycle.key ? today : cycle?.end || '';
   const invalidRange = period === 'custom' && (!start || !end || start > end);
   const trackingStart = dubaiDateTime(trackingStartedAt)?.date || '';
-  const summary = useMemo(() => aggregateExpenses(mapped, { currency, start, end, trackingStart }), [mapped, currency, start, end, trackingStart]);
+  const summary = useMemo(
+    () => aggregateExpenses(mapped, { currency, start, end, trackingStart, averageEnd: completedThrough }),
+    [mapped, currency, start, end, trackingStart, completedThrough]
+  );
   const tableRows = summary.rows.filter(row => (!category || row.category === category) && (!detail || row.subcategory === detail) && (!reviewOnly || row.needsReview)
     && `${row.merchant} ${row.category} ${row.subcategory}`.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
@@ -99,7 +105,7 @@ export default function SpendDashboard({ transactions, loading, currency: prefer
       <div className="spend-empty"><h4>No daily spend in this period</h4><p>Choose another cycle or All available dates to see your breakdown.</p></div> : <>
       <div className="spend-stats" aria-label="Spending summary">
         <div><span>Total daily spend</span><strong>{money(summary.total, currency)}</strong><small>{summary.rows.length} transactions</small></div>
-        <div><span>Daily average</span><strong>{money(summary.average, currency)}</strong><small>{summary.dayCount} tracked days ({shortDate(summary.trackingStart)} – {shortDate(summary.trackingEnd)}), including zero-spend days</small></div>
+        <div><span>Daily average</span><strong>{money(summary.average, currency)}</strong><small>{summary.dayCount} completed tracked days ({summary.trackingStart ? shortDate(summary.trackingStart) : "n/a"} – {summary.averageTrackingEnd ? shortDate(summary.averageTrackingEnd) : "n/a"}), including zero-spend days; today is excluded</small></div>
         <div><span>Needs your review</span><strong>{money(summary.reviewTotal, currency)}</strong><small>{summary.reviewCount} transactions to check</small><button type="button" disabled={!summary.reviewCount} onClick={() => reviewRows()}>Review transactions</button></div>
       </div>
       <div className="spend-chart-grid">
