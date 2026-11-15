@@ -212,6 +212,7 @@ function DailySpend({ onBack }) {
       return {};
     }
   });
+  const [visibleCount, setVisibleCount] = useState(50);
 
   let general = {};
   try {
@@ -233,9 +234,25 @@ function DailySpend({ onBack }) {
       });
       if (!response.ok) throw new Error("Could not load Daily Spend");
       const data = await response.json();
-      setTransactions(data.transactions || []);
-      setRules(data.rules || {});
-      setSettings(data.settings || {});
+      const nextTransactions = data.transactions || [];
+      const nextRules = data.rules || {};
+      const nextSettings = data.settings || {};
+
+      setTransactions((current) =>
+        JSON.stringify(current) === JSON.stringify(nextTransactions)
+          ? current
+          : nextTransactions
+      );
+      setRules((current) =>
+        JSON.stringify(current) === JSON.stringify(nextRules)
+          ? current
+          : nextRules
+      );
+      setSettings((current) =>
+        JSON.stringify(current) === JSON.stringify(nextSettings)
+          ? current
+          : nextSettings
+      );
     } catch (err) {
       setError(err.message || "Could not load Daily Spend");
     } finally {
@@ -480,6 +497,8 @@ function DailySpend({ onBack }) {
     return c === tab;
   });
 
+  const visibleFiltered = filtered.slice(0, visibleCount);
+
   const tabs = [
     ["dashboard", "Dashboard"],
     ["pending", "Pending"],
@@ -634,7 +653,10 @@ function DailySpend({ onBack }) {
             <button
               key={key}
               type="button"
-              onClick={() => setTab(key)}
+              onClick={() => {
+                setTab(key);
+                setVisibleCount(50);
+              }}
               className={`px-4 py-2 rounded-xl font-bold ${
                 tab === key
                   ? "bg-indigo-600 text-white"
@@ -656,7 +678,7 @@ function DailySpend({ onBack }) {
           </div>
         ) : (
           <div className="divide-y dark:divide-gray-700">
-            {filtered.map((item) => (
+            {visibleFiltered.map((item) => (
               <div key={item.id} className="p-4 sm:p-5">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div>
@@ -722,6 +744,17 @@ function DailySpend({ onBack }) {
                 </div>
               </div>
             ))}
+            {filtered.length > visibleCount && (
+              <div className="p-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((count) => count + 50)}
+                  className="px-5 py-2.5 rounded-xl bg-indigo-100 text-indigo-800 font-bold hover:bg-indigo-200"
+                >
+                  Show 50 more ({filtered.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>
