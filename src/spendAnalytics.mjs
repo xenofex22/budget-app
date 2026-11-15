@@ -101,7 +101,7 @@ export function budgetCycleForDate(dateKey) {
     label: end.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }) };
 }
 
-export function aggregateExpenses(items, { currency = 'AED', start = '', end = '', trackingStart = '' } = {}) {
+export function aggregateExpenses(items, { currency = 'AED', start = '', end = '', trackingStart = '', averageEnd = '' } = {}) {
   const rows = items.filter(item => item.currency === currency && (!start || item.localDate >= start) && (!end || item.localDate <= end));
   const categories = new Map(), subcategories = new Map(), days = new Map();
   let totalCents = 0, reviewCents = 0;
@@ -130,11 +130,20 @@ export function aggregateExpenses(items, { currency = 'AED', start = '', end = '
   }
   const groups = map => [...map.values()].map(g => ({ name: g.name, total: g.cents / 100, count: g.count }))
     .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+  const completedDaily = averageEnd
+    ? daily.filter(item => item.date <= averageEnd)
+    : daily;
+  const completedTotalCents = rows
+    .filter(item => !averageEnd || item.localDate <= averageEnd)
+    .reduce((sum, item) => sum + Math.round(item.amount * 100), 0);
+
   return { rows, total: totalCents / 100, reviewTotal: reviewCents / 100,
     reviewCount: rows.filter(row => row.needsReview).length, categories: groups(categories),
     subcategories: groups(subcategories).map(g => { const [category, subcategory] = g.name.split('\u0000'); return { ...g, category, subcategory }; }),
     daily, trackingStart: first || '', trackingEnd: last || '',
-    dayCount: daily.length, average: daily.length ? totalCents / 100 / daily.length : 0 };
+    dayCount: completedDaily.length,
+    average: completedDaily.length ? completedTotalCents / 100 / completedDaily.length : 0,
+    averageTrackingEnd: completedDaily.at(-1)?.date || '' };
 }
 
 function csvCell(value) {
