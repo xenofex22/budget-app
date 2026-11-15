@@ -61,10 +61,25 @@ function parseRawSpendMessage(value) {
   let currency = "AED";
   let amount = null;
 
+  // Prefer an explicitly labelled purchase amount. EI+ messages can contain
+  // other AED values such as Available Limit, which must never be treated as
+  // the purchase amount.
+  const labelledPrefixMatch = text.match(
+    /\bAmount\s*:\s*(AED|USD|EUR|TRY)\s*([0-9][0-9,]*(?:\.\d{1,2})?)/i
+  );
+  const labelledSuffixMatch = text.match(
+    /\bAmount\s*:\s*([0-9][0-9,]*(?:\.\d{1,2})?)\s*(AED|USD|EUR|TRY)\b/i
+  );
   const prefixMatch = text.match(/\b(AED|USD|EUR|TRY)\s*([0-9][0-9,]*(?:\.\d{1,2})?)/i);
   const suffixMatch = text.match(/\b([0-9][0-9,]*(?:\.\d{1,2})?)\s*(AED|USD|EUR|TRY)\b/i);
 
-  if (prefixMatch) {
+  if (labelledPrefixMatch) {
+    currency = labelledPrefixMatch[1].toUpperCase();
+    amount = Number(labelledPrefixMatch[2].replace(/,/g, ""));
+  } else if (labelledSuffixMatch) {
+    amount = Number(labelledSuffixMatch[1].replace(/,/g, ""));
+    currency = labelledSuffixMatch[2].toUpperCase();
+  } else if (prefixMatch) {
     currency = prefixMatch[1].toUpperCase();
     amount = Number(prefixMatch[2].replace(/,/g, ""));
   } else if (suffixMatch) {
