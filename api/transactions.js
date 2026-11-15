@@ -23,6 +23,32 @@ function merchantKey(value) {
   return cleanText(value, 100).toUpperCase().replace(/\s+/g, " ");
 }
 
+function parseStoredTransaction(row) {
+  try {
+    return typeof row === "string" ? JSON.parse(row) : row;
+  } catch {
+    return null;
+  }
+}
+
+function isLikelyDuplicate(existing, candidate) {
+  if (!existing || !candidate) return false;
+
+  const sameAmount = Number(existing.amount) === Number(candidate.amount);
+  const sameCurrency = cleanText(existing.currency || "AED", 5).toUpperCase() === candidate.currency;
+  const sameMerchant = merchantKey(existing.merchant) === merchantKey(candidate.merchant);
+  if (!sameAmount || !sameCurrency || !sameMerchant) return false;
+
+  const existingTime = new Date(existing.occurredAt || existing.receivedAt || 0).getTime();
+  const candidateTime = new Date(candidate.occurredAt || candidate.receivedAt || 0).getTime();
+  if (!Number.isFinite(existingTime) || !Number.isFinite(candidateTime)) return false;
+
+  // Duplicate iPhone automations usually arrive within seconds of each other.
+  // Five minutes is intentionally generous to survive delayed Shortcut runs,
+  // while still allowing legitimate repeat purchases later in the day.
+  return Math.abs(existingTime - candidateTime) <= 5 * 60 * 1000;
+}
+
 function parseRawSpendMessage(value) {
   const text = cleanText(value, 500);
   if (!text) return null;
@@ -141,6 +167,21 @@ module.exports = async function handler(req, res) {
     classification,
     classifiedBy: classification === "pending" ? null : "merchant_rule",
   };
+
+    const recentRows = await command("LRANGE", transactionsKey(username), "0", "49");
+    const duplicate = (Array.isArray(recentRows) ? recentRows : [])
+      .map(parseStoredTransaction)
+      .filter(Boolean)
+      .find((item) => isLikelyDuplicate(item, transaction));
+
+    if (duplicate) {
+      return res.status(200).json({
+        ok: true,
+        duplicate: true,
+        id: duplicate.id,
+        classification: duplicate.classification || classification,
+      });
+    }
 
     await command("LPUSH", transactionsKey(username), JSON.stringify(transaction));
 
