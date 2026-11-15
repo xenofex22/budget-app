@@ -38,12 +38,6 @@ function parseStoredTransaction(row) {
   }
 }
 
-function isParkingRepeat(transaction) {
-  const merchant = merchantKey(transaction?.merchant);
-  return Number(transaction?.amount || 0) === 20 &&
-    /(PARK|PARKONIC|VALET|DIGITAL DUBAI)/.test(merchant);
-}
-
 function isLikelyDuplicate(existing, candidate) {
   if (!existing || !candidate) return false;
 
@@ -59,8 +53,6 @@ function isLikelyDuplicate(existing, candidate) {
   const sameCurrency = cleanText(existing.currency || "AED", 5).toUpperCase() === candidate.currency;
   const sameMerchant = merchantKey(existing.merchant) === merchantKey(candidate.merchant);
   if (!sameAmount || !sameCurrency || !sameMerchant) return false;
-
-  if (isParkingRepeat(existing) && isParkingRepeat(candidate)) return false;
 
   const existingTime = new Date(existing.occurredAt || existing.receivedAt || 0).getTime();
   const candidateTime = new Date(candidate.occurredAt || candidate.receivedAt || 0).getTime();
