@@ -384,6 +384,18 @@ function DailySpend({ onBack }) {
     }
   }
 
+  const analysisTransactions = useMemo(
+    () => dedupeShortcutTransactions(transactions),
+    [transactions]
+  );
+
+  const dailyTransactions = useMemo(
+    () => analysisTransactions.filter((item) => item.classification === "daily_spend"),
+    [analysisTransactions]
+  );
+
+  const suppressedDuplicateCount = transactions.length - analysisTransactions.length;
+
   const completedCycles = useMemo(() => {
     const grouped = new Map();
     const today = dateOnly(new Date());
@@ -440,18 +452,6 @@ function DailySpend({ onBack }) {
   const today = dateOnly(now);
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-
-  const analysisTransactions = useMemo(
-    () => dedupeShortcutTransactions(transactions),
-    [transactions]
-  );
-
-  const dailyTransactions = useMemo(
-    () => analysisTransactions.filter((item) => item.classification === "daily_spend"),
-    [analysisTransactions]
-  );
-
-  const suppressedDuplicateCount = transactions.length - analysisTransactions.length;
 
   const earliestDailySpendDate = dailyTransactions.reduce((earliest, item) => {
     const when = new Date(item.occurredAt);
