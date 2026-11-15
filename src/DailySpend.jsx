@@ -385,7 +385,11 @@ function DailySpend({ onBack }) {
 
   const completedSpend = dailyTransactions.reduce((sum, item) => {
     const when = new Date(item.occurredAt);
-    return dateOnly(when) <= yesterday ? sum + Number(item.amount || 0) : sum;
+    if (Number.isNaN(when.getTime())) return sum;
+    const day = dateOnly(when);
+    return day >= trackingStart && day <= yesterday
+      ? sum + Number(item.amount || 0)
+      : sum;
   }, 0);
 
   const actualAverage = completedDays > 0 ? completedSpend / completedDays : 0;
