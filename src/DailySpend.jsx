@@ -30,12 +30,6 @@ function transactionTimestamp(item) {
   return Number.isFinite(value) ? value : null;
 }
 
-function isLegitimateCloseParkingRepeat(item) {
-  const merchant = normalizeDuplicateMerchant(item.merchant);
-  return Number(item.amount || 0) === 20 &&
-    /(PARK|PARKONIC|VALET|DIGITAL DUBAI)/.test(merchant);
-}
-
 function dedupeShortcutTransactions(items) {
   const kept = [];
 
@@ -66,10 +60,6 @@ function dedupeShortcutTransactions(items) {
           normalizeDuplicateMerchant(existing.merchant) === normalizeDuplicateMerchant(item.merchant);
 
         if (!sameCore) return false;
-
-        if (isLegitimateCloseParkingRepeat(item) && isLegitimateCloseParkingRepeat(existing)) {
-          return false;
-        }
 
         if (item.source === "iphone-shortcut" && existing.source === "iphone-shortcut") {
           return Math.abs(time - existingTime) <= 5 * 60 * 1000;
